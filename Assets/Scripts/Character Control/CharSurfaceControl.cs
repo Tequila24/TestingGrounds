@@ -20,7 +20,7 @@ public class CharSurfaceControl : MonoBehaviour
 		gravityDirection = Physics.gravity.normalized * -1;
     }
 
-	void FixedUpdate()
+	void LateUpdate()
 	{
 		CheckSurface();
 	}

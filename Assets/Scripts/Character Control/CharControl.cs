@@ -44,26 +44,4 @@ public class CharControl : MonoBehaviour
     public void FixedUpdate()
     {
     }
-
-/*
-    private void UpdateCharState()
-    {
-        previousCharState = currentCharState;
-        
-        if (_surfaceControl.surfaceObject == null) {
-            currentCharState = CharStates.FreeFall;
-        }
-
-        if (_surfaceControl.surfaceObject != null) {
-            currentCharState = CharStates.Walk;
-        }
-
-        if (previousCharState != currentCharState)
-        {
-            Debug.Log(previousCharState + "->" + currentCharState);
-            TransformVelocity();
-        }
-    }
-*/
-
 }
