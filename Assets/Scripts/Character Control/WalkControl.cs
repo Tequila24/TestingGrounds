@@ -6,6 +6,8 @@ public class WalkControl : MonoBehaviour
 {
     private CharSurfaceControl _surface = null;
 
+    private Rigidbody charBody = null;
+
     protected Vector3 _velocity = Vector3.zero;
     protected Quaternion _rotation = Quaternion.identity;
 
@@ -33,6 +35,8 @@ public class WalkControl : MonoBehaviour
         if (_surface == null) {
             _surface = this.gameObject.AddComponent<CharSurfaceControl>();
         }
+
+        charBody = this.gameObject.GetComponent<Rigidbody>();
     }
 
 
@@ -108,7 +112,7 @@ public class WalkControl : MonoBehaviour
                                         Quaternion.FromToRotation(Vector3.forward, new Vector3(lookDirection.x, 0, lookDirection.z)),
                                         0.5f);
 
-        this.transform.position += _velocity * Time.deltaTime;
+        charBody.velocity = _velocity;
         this.transform.rotation = _rotation;
     }
 
@@ -123,32 +127,32 @@ public class WalkControl : MonoBehaviour
                                         Quaternion.FromToRotation(Vector3.forward, new Vector3(lookDirection.x, 0, lookDirection.z)),
                                         0.1f    );
 
-        this.transform.position += _velocity * Time.deltaTime;
+        charBody.velocity = _velocity;
     }
 
     private void SlideFall(Vector2 stepDirection, Vector3 lookDirection)
     {
         Vector3 slideVelocity = Vector3.ProjectOnPlane(Physics.gravity * 1f, _surface.contactPointNormal);
         Vector3 strafe = Quaternion.FromToRotation(Vector3.forward, slideVelocity) * new Vector3(stepDirection.x, 0, 0) * 5;
-        
+        Debug.DrawRay(this.transform.position, strafe * 10, Color.blue, 100);
         
         inertiaVector = Vector3.Lerp(inertiaVector, Vector3.zero, 0.04f);
 
         _velocity = Vector3.Lerp(_velocity, slideVelocity + strafe, 0.5f) + inertiaVector;
         
-        this.transform.position += _velocity * Time.deltaTime;
+        charBody.velocity = _velocity;
     }
 
     private void HeightAdjustment()
     {
-        Vector3 adjustVector = new Vector3(0, _surface.contactPoint.y +  1.0f - this.transform.position.y, 0);
+        Vector3 adjustVector = new Vector3(0, _surface.contactPoint.y +  1.0f - charBody.velocity.y, 0);
         float angleToSurface = Vector3.Angle(Physics.gravity, -_surface.contactPointNormal) * Mathf.Deg2Rad;
         Quaternion rotationToSurface = Quaternion.FromToRotation(Physics.gravity, -_surface.contactPointNormal);
-        heightAdjust = Vector3.Lerp(   heightAdjust,
+        /*heightAdjust = Vector3.Lerp(   heightAdjust,
                                         ( rotationToSurface * adjustVector * Mathf.Cos(angleToSurface) ), 
-                                        0.8f    );
+                                        0.8f    );*/
 
-        this.transform.position += heightAdjust;
+        charBody.velocity = heightAdjust;
     }
 
     private void TransformVelocity() 
@@ -185,8 +189,8 @@ public class WalkControl : MonoBehaviour
 
 
 /*
-Debug.DrawRay(this.transform.position, _velocity, Color.red, 10f);
-Debug.DrawRay(this.transform.position, transformedVelocity, Color.blue, 10f);
+Debug.DrawRay(charBody.velocity, _velocity, Color.red, 10f);
+Debug.DrawRay(charBody.velocity, transformedVelocity, Color.blue, 10f);
 */
 
 /*\
@@ -194,6 +198,6 @@ Debug.DrawRay(this.transform.position, transformedVelocity, Color.blue, 10f);
 
 /*
             Vector3 horizontalVelocity = Vector3.ProjectOnPlane(oldVelocity, _surface.contactPointNormal);
-            Debug.DrawRay(this.transform.position, horizontalVelocity * 10, Color.green, Time.deltaTime);   
+            Debug.DrawRay(charBody.velocity, horizontalVelocity * 10, Color.green, Time.deltaTime);   
             transformedVelocity = horizontalVelocity;
 */
