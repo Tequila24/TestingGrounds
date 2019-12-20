@@ -39,6 +39,11 @@ public class WalkControl : MonoBehaviour
         charBody = this.gameObject.GetComponent<Rigidbody>();
     }
 
+    public void TryJump()
+    {
+        
+    }
+
 
     public void Process(Vector2 stepDirection, Vector3 lookDirection)
     {
@@ -134,7 +139,8 @@ public class WalkControl : MonoBehaviour
     {
         Vector3 slideVelocity = Vector3.ProjectOnPlane(Physics.gravity * 1f, _surface.contactPointNormal);
         Vector3 strafe = Quaternion.FromToRotation(Vector3.forward, slideVelocity) * new Vector3(stepDirection.x, 0, 0) * 5;
-        Debug.DrawRay(this.transform.position, strafe * 10, Color.blue, 100);
+        Debug.DrawRay(this.transform.position, strafe * 4, Color.blue, 100);
+        Debug.DrawRay(this.transform.position + Vector3.up, inertiaVector * 4, Color.yellow, 100);
         
         inertiaVector = Vector3.Lerp(inertiaVector, Vector3.zero, 0.04f);
 
@@ -145,14 +151,20 @@ public class WalkControl : MonoBehaviour
 
     private void HeightAdjustment()
     {
-        Vector3 adjustVector = new Vector3(0, _surface.contactPoint.y +  1.0f - charBody.velocity.y, 0);
-        float angleToSurface = Vector3.Angle(Physics.gravity, -_surface.contactPointNormal) * Mathf.Deg2Rad;
-        Quaternion rotationToSurface = Quaternion.FromToRotation(Physics.gravity, -_surface.contactPointNormal);
-        /*heightAdjust = Vector3.Lerp(   heightAdjust,
-                                        ( rotationToSurface * adjustVector * Mathf.Cos(angleToSurface) ), 
-                                        0.8f    );*/
+        float heightOffset = _surface.contactPoint.y +  1.0f - this.transform.position.y;
+        Debug.Log(heightOffset);
+        if (heightOffset > 0.1f) {
+            heightOffset+= 0.1f;
+            Vector3 adjustVector = new Vector3(0, heightOffset, 0);
+            float angleToSurface = Vector3.Angle(Physics.gravity, -_surface.contactPointNormal) * Mathf.Deg2Rad;
+            Quaternion rotationToSurface = Quaternion.FromToRotation(Physics.gravity, -_surface.contactPointNormal);
+            /*heightAdjust = Vector3.Lerp(   heightAdjust,
+                                            ( rotationToSurface * adjustVector * Mathf.Cos(angleToSurface) ), 
+                                            0.8f    );*/
+            heightAdjust = (rotationToSurface * adjustVector * Mathf.Cos(angleToSurface)) * Time.deltaTime;
 
-        charBody.velocity = heightAdjust;
+            this.transform.position += heightAdjust;
+        }
     }
 
     private void TransformVelocity() 

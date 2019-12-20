@@ -31,13 +31,14 @@ public class PlayerControl : CharControl
     // Update is called once per frame
     new void FixedUpdate()
     {
+        UpdateInputs();
+
         _walkControl.Process(_stepDirection, _lookDirection);
     }
 
     void Update()
     {
         UpdateCamera();
-        UpdateInputs();
     }
 
 
@@ -56,10 +57,10 @@ public class PlayerControl : CharControl
                                             0 ) * Vector3.forward;
 
         Debug.DrawRay(this.transform.position, _lookDirection * 10, Color.red, Time.deltaTime);
-        //Quaternion deltaLookRotation = Quaternion.
-        //_charControl.LookDirection = deltaLookRotation * _charControl.LookDirection;
 
         //  move char
+        if ( _inputManager.IsKeyDown(KeyCode.Space) != 0 ) 
+            _walkControl.TryJump();
     }
 
 
