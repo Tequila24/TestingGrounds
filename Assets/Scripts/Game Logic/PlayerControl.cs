@@ -31,14 +31,13 @@ public class PlayerControl : CharControl
     // Update is called once per frame
     new void FixedUpdate()
     {
-        UpdateInputs();
-
         _walkControl.Process(_stepDirection, _lookDirection);
     }
 
     void Update()
     {
         UpdateCamera();
+        UpdateInputs();
     }
 
 
