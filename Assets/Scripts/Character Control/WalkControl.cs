@@ -22,6 +22,7 @@ public class WalkControl : MonoBehaviour
 
 
     //velocities
+    private Vector3 slideStrafe = Vector3.zero;
     private Vector3 heightAdjust = Vector3.zero;
     private Vector3 inertiaVector = Vector3.zero;
 
@@ -110,49 +111,30 @@ public class WalkControl : MonoBehaviour
                                 Quaternion.FromToRotation(Vector3.forward, new Vector3(lookDirection.x, 0, lookDirection.z)) * 
                                 new Vector3(stepDirection.x, 0, stepDirection.y) * 5;
 
-        inertiaVector = Vector3.Lerp(inertiaVector, Vector3.zero, 0.1f);
-
-        _velocity = _surface.contactPointVelocity + stepVelocity + inertiaVector;
         _rotation = Quaternion.Lerp(    _rotation,
                                         Quaternion.FromToRotation(Vector3.forward, new Vector3(lookDirection.x, 0, lookDirection.z)),
                                         0.5f);
 
-        charBody.velocity = _velocity;
+        charBody.velocity = stepVelocity;
         this.transform.rotation = _rotation;
     }
 
     private void Freefall(Vector2 stepDirection, Vector3 lookDirection)
     {
-        Vector3 fallVelocity = Physics.gravity * 2;
-
-        inertiaVector = Vector3.Lerp(inertiaVector, Vector3.zero, 0.05f);
-
-        _velocity = Vector3.Lerp(_velocity, fallVelocity, 0.5f) + inertiaVector;
-        _rotation = Quaternion.Lerp(    _rotation,
-                                        Quaternion.FromToRotation(Vector3.forward, new Vector3(lookDirection.x, 0, lookDirection.z)),
-                                        0.1f    );
-
-        charBody.velocity = _velocity;
     }
 
     private void SlideFall(Vector2 stepDirection, Vector3 lookDirection)
     {
-        Vector3 slideVelocity = Vector3.ProjectOnPlane(Physics.gravity * 1f, _surface.contactPointNormal);
-        Vector3 strafe = Quaternion.FromToRotation(Vector3.forward, slideVelocity) * new Vector3(stepDirection.x, 0, 0) * 5;
-        Debug.DrawRay(this.transform.position, strafe * 4, Color.blue, 100);
-        Debug.DrawRay(this.transform.position + Vector3.up, inertiaVector * 4, Color.yellow, 100);
-        
-        inertiaVector = Vector3.Lerp(inertiaVector, Vector3.zero, 0.04f);
+        charBody.velocity -= slideStrafe;
 
-        _velocity = Vector3.Lerp(_velocity, slideVelocity + strafe, 0.5f) + inertiaVector;
-        
-        charBody.velocity = _velocity;
+        Quaternion rotation = Quaternion.Lerp(Quaternion.identity, Quaternion.FromToRotation(Vector3.forward, new Vector3(stepDirection.x, 0, 0)), 0.01f);
+
+        charBody.velocity = rotation * charBody.velocity;
     }
 
     private void HeightAdjustment()
     {
         float heightOffset = _surface.contactPoint.y +  1.0f - this.transform.position.y;
-        Debug.Log(heightOffset);
         if (heightOffset > 0.1f) {
             heightOffset+= 0.1f;
             Vector3 adjustVector = new Vector3(0, heightOffset, 0);
@@ -171,26 +153,46 @@ public class WalkControl : MonoBehaviour
     {
         Vector3 transformedVelocity = Vector3.zero;
 
-
-        switch (currentCharState)
+        switch (previousCharState)
         {
             case CharStates.Walk:
-                transformedVelocity = Vector3.ProjectOnPlane(_velocity, _surface.contactPointNormal);
                 break;
 
             case CharStates.FreeFall:
-                transformedVelocity = _velocity;
                 break;
 
             case CharStates.SlideFall:
-                transformedVelocity = Vector3.ProjectOnPlane(_velocity, _surface.contactPointNormal);
+                //charBody.velocity -= slideStrafe;
+                //slideStrafe = Vector3.zero;
                 break;
 
             default:
             break;
         }
 
-        _velocity = Vector3.zero;
+
+        switch (currentCharState)
+        {
+            case CharStates.Walk:
+                charBody.useGravity = false;
+                transformedVelocity = Vector3.ProjectOnPlane(charBody.velocity, _surface.contactPointNormal);
+                break;
+
+            case CharStates.FreeFall:
+                charBody.useGravity = true;
+                //charBody.velocity += _velocity;
+                break;
+
+            case CharStates.SlideFall:
+                charBody.useGravity = true;
+                //transformedVelocity = Vector3.ProjectOnPlane(_velocity, _surface.contactPointNormal);
+                break;
+
+            default:
+            break;
+        }
+
+        //_velocity = Vector3.zero;
         inertiaVector = transformedVelocity;
     }
 

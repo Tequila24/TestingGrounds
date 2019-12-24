@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CharSurfaceControl : MonoBehaviour
 {
-    private float rayLength = 1.1f;
+    private float rayLength = 2.0f;
 	private Vector3 gravityDirection;
     
 	public GameObject surfaceObject;
@@ -45,7 +45,7 @@ public class CharSurfaceControl : MonoBehaviour
 		contactPoint = surfaceRayHit.point;
 		contactPointNormal = surfaceRayHit.normal;
 
-		Debug.DrawRay(contactPoint, contactPointNormal * 4, Color.red, 100);
+		Debug.DrawRay(contactPoint, contactPointNormal * 2, Color.red, 1);
 
 		// if surface have rigid body - get its velocities
 		Rigidbody surfaceBody = surfaceObject.GetComponent<Rigidbody>();
