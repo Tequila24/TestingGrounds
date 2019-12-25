@@ -7,20 +7,59 @@ public class WheelController : MonoBehaviour
 {
 
     [SerializeField]
-    private float wheelRadius = 0;
+    [Range (4,32)]
+    uint radialAccuracy = 4;
     [SerializeField]
-    private float dampingValue = 0;
+    [Range (2,32)]
+    uint widthAccuracy = 2;
+
     [SerializeField]
-    private float springForce = 0;
+    private float wheelRadius = 1;
+    [SerializeField]
+    private float wheelWidth = 1;
+    [SerializeField]
+    private float wheelMass = 1;
+    [SerializeField]
+    private float dampingValue = 1;
+    [SerializeField]
+    private float springValue = 1;
     [SerializeField]
     private Vector3 suspensionAxis = Vector3.zero;
 
-    private bool isGrounded = false;
     private Rigidbody carBody = null;
+    private Rigidbody wheelBody = null;
+
+    private List<Vector3> raycastVectors = new List<Vector3>();
 
     void Awake()
     {
         carBody = this.transform.parent.GetComponent<Rigidbody>();
+        wheelBody = this.gameObject.AddComponent<Rigidbody>();
+        wheelBody.mass = wheelMass;
+
+        GenerateRaycastVectors();
+    }
+
+    void GenerateRaycastVectors()
+    {
+        wheelWidth = this.gameObject.GetComponent<MeshRenderer>().bounds.extents.x;
+        wheelRadius = this.gameObject.GetComponent<MeshRenderer>().bounds.extents.z;
+
+        for (float j = -wheelWidth; j <= wheelWidth; j += (wheelWidth*2)/widthAccuracy)
+        {
+            
+
+            for (int i = 0; i < radialAccuracy; i++)
+            {
+                Quaternion rotation = Quaternion.AngleAxis(360/radialAccuracy * i, this.transform.right);
+                Vector3 vec = rotation *    (this.transform.up * wheelRadius) + 
+                                            (new Vector3(j, 0, 0));
+
+                raycastVectors.Add(vec);
+            }
+        }
+
+        Debug.Log(raycastVectors.Count);
     }
 
     
@@ -30,45 +69,72 @@ public class WheelController : MonoBehaviour
         
     }
 
+
+
     // Update is called once per frame
     void FixedUpdate()
     {
-        GroundCheck();
+        CastRays();
 
-        if (isGrounded == true) {
-            ApplyForces();
-        }
+        ApplyForces();
     }
 
 
-    void GroundCheck()
+    void CastRays()
     {
-        RaycastHit rayHit;
-        if ( Physics.Raycast(this.transform.position, -this.transform.up, out rayHit, wheelRadius) )
+        List<RaycastHit> rayHits = new List<RaycastHit>();
+
+        foreach (Vector3 vector in raycastVectors)
         {
-            isGrounded = true;
-        } else {
-            isGrounded = false;
+            RaycastHit hit;
+            if ( Physics.Raycast(this.transform.position, vector, out hit, wheelRadius) ) 
+            {
+                rayHits.Add(hit);
+            }
+        }
+
+        foreach (RaycastHit hit in rayHits)
+        {
+            Vector3 pointVelocity = wheelBody.GetPointVelocity(hit.point);
+            float cosAngle = Mathf.Cos(Vector3.Angle(pointVelocity, hit.normal) * Mathf.Deg2Rad);
+            Debug.Log(cosAngle);
+            Vector3 normalForce = wheelMass * pointVelocity * cosAngle;
+
+            wheelBody.AddForceAtPosition(normalForce, this.transform.position);
+
+            Debug.DrawRay(hit.point, normalForce, Color.red, 10);
         }
     }
 
 
     void ApplyForces()
     {
-        Debug.Log("im forcing");
-        Vector3 forceVector = suspensionAxis;
+        float wheelOffset = 0;
 
-        carBody.AddForceAtPosition( forceVector, this.transform.position - suspensionAxis);
+        //Vector3 springForce = wheelOffset * springValue;
+
+        //Vector3 carBodyVelocityAtPoint = carBody.GetPointVelocity(this.transform.position - suspensionAxis) - this.transform.;
+        //Vector3 dampingVector = carBodyVelocityAtPoint * dampingValue;
+
+        //Vector3 forceVector = suspensionVector - dampingVector;
+
+        //carBody.AddForceAtPosition( forceVector, this.transform.position - suspensionAxis);
     }
-
 
 
     void OnDrawGizmos()
     {
         Handles.color = Color.green;
-        Handles.DrawWireDisc(this.transform.position, this.transform.right, wheelRadius);
-        Handles.DrawWireDisc(this.transform.position + (this.transform.up * (wheelRadius/10 - wheelRadius)), this.transform.right, wheelRadius/10);
 
+        foreach (Vector3 vec in raycastVectors)
+        {
+            Handles.DrawLine(this.transform.position, this.transform.position + vec);
+        }
+
+
+        Handles.DrawWireDisc(this.transform.position, this.transform.right, wheelRadius);
+
+        Gizmos.color = Color.green;
         Gizmos.DrawLine(this.transform.position + suspensionAxis - this.transform.forward*0.25f,
                         this.transform.position + suspensionAxis + this.transform.forward*0.25f );
     }

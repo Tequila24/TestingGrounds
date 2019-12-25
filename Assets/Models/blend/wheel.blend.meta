@@ -4,11 +4,23 @@ ModelImporter:
   serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
+    100002: Wheel
+    100004: WheelCollider
     400000: //RootNode
+    400002: Wheel
+    400004: WheelCollider
     2100000: Material.002
+    2100002: No Name
     2300000: //RootNode
+    2300002: Wheel
+    2300004: WheelCollider
     3300000: //RootNode
+    3300002: Wheel
+    3300004: WheelCollider
     4300000: Body
+    4300002: Wheel
+    4300004: WheelCollider
+    2186277476908879412: ImportLogs
   externalObjects: {}
   materials:
     importMaterials: 1
