@@ -17,7 +17,6 @@ public class WalkControl : MonoBehaviour
     private enum CharStates : byte {    None = 0, FreeFall, SlideFall, Walk    };
     private CharStates previousCharState = CharStates.None;
     private CharStates currentCharState = CharStates.None;
-    private bool isStateChanged = false;
 
 
 
@@ -95,7 +94,6 @@ public class WalkControl : MonoBehaviour
         if (previousCharState != currentCharState) 
         {
             Debug.Log(previousCharState + "->" + currentCharState);
-            isStateChanged = true;
 
             TransformVelocity();
         }

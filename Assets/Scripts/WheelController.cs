@@ -20,12 +20,19 @@ public class WheelController : MonoBehaviour
     [SerializeField]
     private float wheelMass = 1;
     [SerializeField]
-    private float dampingValue = 1;
+    [Range (0,1)]
+    private float dampingValue = 0.5f;
     [SerializeField]
     private float springValue = 1;
-    [SerializeField]
-    private Vector3 suspensionAxis = Vector3.zero;
 
+
+
+    private Vector3 localRestPosition = Vector3.zero;
+    private Vector3 suspensionJointRelativeToCar = Vector3.zero;
+
+
+
+    [SerializeField]
     private Rigidbody carBody = null;
     private Rigidbody wheelBody = null;
 
@@ -33,11 +40,16 @@ public class WheelController : MonoBehaviour
 
     void Awake()
     {
-        carBody = this.transform.parent.GetComponent<Rigidbody>();
-        wheelBody = this.gameObject.AddComponent<Rigidbody>();
+        //carBody = this.transform.parent.GetComponent<Rigidbody>();
+        wheelBody = this.gameObject.GetComponent<Rigidbody>();
+        if (wheelBody == null) {
+            wheelBody = this.gameObject.AddComponent<Rigidbody>();
+        }
+        
         wheelBody.mass = wheelMass;
-
-        GenerateRaycastVectors();
+        localRestPosition = wheelBody.transform.position - carBody.transform.position;
+ 
+        //GenerateRaycastVectors();
     }
 
     void GenerateRaycastVectors()
@@ -82,7 +94,7 @@ public class WheelController : MonoBehaviour
 
     void CastRays()
     {
-        List<RaycastHit> rayHits = new List<RaycastHit>();
+        /*List<RaycastHit> rayHits = new List<RaycastHit>();
 
         foreach (Vector3 vector in raycastVectors)
         {
@@ -103,39 +115,58 @@ public class WheelController : MonoBehaviour
             wheelBody.AddForceAtPosition(normalForce, this.transform.position);
 
             Debug.DrawRay(hit.point, normalForce, Color.red, 10);
-        }
+        }*/
     }
 
 
     void ApplyForces()
     {
-        float wheelOffset = 0;
-
-        //Vector3 springForce = wheelOffset * springValue;
-
-        //Vector3 carBodyVelocityAtPoint = carBody.GetPointVelocity(this.transform.position - suspensionAxis) - this.transform.;
-        //Vector3 dampingVector = carBodyVelocityAtPoint * dampingValue;
-
-        //Vector3 forceVector = suspensionVector - dampingVector;
-
-        //carBody.AddForceAtPosition( forceVector, this.transform.position - suspensionAxis);
+        CalculateSuspension();
     }
+
+
+    void CalculateSuspension()
+    {
+        Vector3 localWheelPos = wheelBody.transform.position - carBody.transform.position;
+        Vector3 wheelOffset = (localWheelPos - carBody.rotation * localRestPosition);
+
+        // do not let wheels move anywhere except axis
+        Vector3 horizontalOffset = Vector3.ProjectOnPlane(wheelOffset, carBody.transform.up);
+        wheelBody.transform.position -= horizontalOffset;
+
+        // spring force
+        Vector3 verticalOffset = wheelOffset - horizontalOffset;
+        Vector3 springForce = verticalOffset * springValue;
+        wheelBody.AddForce(-springForce * 0.5f);
+        carBody.AddForceAtPosition(springForce * 0.5f, carBody.position + carBody.rotation * localRestPosition);
+
+        // damping force
+        Vector3 carPointVelocity = carBody.GetRelativePointVelocity(localRestPosition);
+        Vector3 wheelVelocity = wheelBody.velocity;
+        Vector3 relativeVelocity = wheelVelocity - carPointVelocity;
+        Vector3 dampingAcceleration = relativeVelocity * dampingValue;
+        wheelBody.AddForce(-dampingAcceleration * 0.5f, ForceMode.Impulse);
+        carBody.AddForceAtPosition(dampingAcceleration * 0.5f, carBody.position + carBody.rotation * localRestPosition, ForceMode.Impulse);
+
+
+
+        Debug.DrawRay(wheelBody.position, relativeVelocity, Color.blue, Time.deltaTime);
+        Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, -springForce, Color.red, Time.deltaTime);
+        Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, horizontalOffset, Color.yellow, Time.deltaTime);
+    }
+
 
 
     void OnDrawGizmos()
     {
         Handles.color = Color.green;
 
-        foreach (Vector3 vec in raycastVectors)
+        /*foreach (Vector3 vec in raycastVectors)
         {
             Handles.DrawLine(this.transform.position, this.transform.position + vec);
-        }
+        }*/
 
 
         Handles.DrawWireDisc(this.transform.position, this.transform.right, wheelRadius);
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(this.transform.position + suspensionAxis - this.transform.forward*0.25f,
-                        this.transform.position + suspensionAxis + this.transform.forward*0.25f );
     }
 }
