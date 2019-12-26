@@ -17,10 +17,7 @@ public class BitchAssCar : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector3 newMoveDirection = new Vector3( Input.GetAxisRaw("Horizontal"),
-                                                0,
-                                                Input.GetAxisRaw("Vertical")  );
-
-        thisBody.AddForce(this.transform.rotation * newMoveDirection * 1000);
+        thisBody.AddForce(this.transform.forward * Input.GetAxisRaw("Vertical") * thisBody.mass);
+        thisBody.AddTorque(this.transform.up * Input.GetAxisRaw("Horizontal") * thisBody.mass);
     }
 }

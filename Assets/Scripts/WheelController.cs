@@ -132,7 +132,16 @@ public class WheelController : MonoBehaviour
 
         // do not let wheels move anywhere except axis
         Vector3 horizontalOffset = Vector3.ProjectOnPlane(wheelOffset, carBody.transform.up);
-        wheelBody.transform.position -= horizontalOffset;
+        wheelBody.AddForce(-horizontalOffset * wheelMass, ForceMode.VelocityChange);
+
+
+        // rotation correction
+        Quaternion deltaRotation = Quaternion.FromToRotation(this.transform.right, carBody.transform.right);
+        //this.transform.rotation = Quaternion.Lerp(this.transform.rotation, deltaRotation;
+        this.transform.rotation = deltaRotation * this.transform.rotation;
+
+
+
 
         // spring force
         Vector3 verticalOffset = wheelOffset - horizontalOffset;
@@ -140,13 +149,14 @@ public class WheelController : MonoBehaviour
         wheelBody.AddForce(-springForce * 0.5f);
         carBody.AddForceAtPosition(springForce * 0.5f, carBody.position + carBody.rotation * localRestPosition);
 
+
         // damping force
         Vector3 carPointVelocity = carBody.GetRelativePointVelocity(localRestPosition);
         Vector3 wheelVelocity = wheelBody.velocity;
         Vector3 relativeVelocity = wheelVelocity - carPointVelocity;
         Vector3 dampingAcceleration = relativeVelocity * dampingValue;
-        wheelBody.AddForce(-dampingAcceleration * 0.5f, ForceMode.Impulse);
-        carBody.AddForceAtPosition(dampingAcceleration * 0.5f, carBody.position + carBody.rotation * localRestPosition, ForceMode.Impulse);
+        wheelBody.AddForce(-dampingAcceleration * 0.5f * Time.deltaTime, ForceMode.VelocityChange);
+        carBody.AddForceAtPosition(dampingAcceleration * 0.5f * Time.deltaTime, carBody.position + carBody.rotation * localRestPosition, ForceMode.VelocityChange);
 
 
 
