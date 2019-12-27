@@ -3,20 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+
 public class WheelController : MonoBehaviour
 {
 
-    [SerializeField]
-    [Range (4,32)]
-    uint radialAccuracy = 4;
-    [SerializeField]
-    [Range (2,32)]
-    uint widthAccuracy = 2;
+    // killme
+    bool inited = false;
+
 
     [SerializeField]
     private float wheelRadius = 1;
-    [SerializeField]
-    private float wheelWidth = 1;
     [SerializeField]
     private float wheelMass = 1;
     [SerializeField]
@@ -26,19 +22,37 @@ public class WheelController : MonoBehaviour
     private float springValue = 1;
 
 
+    [SerializeField]
+    [Range (0,10)]
+    private float StrutToTop = 0;    
+    [SerializeField]
+    [Range (-10,0)]
+    private float StrutToBottom = 0;
+    [SerializeField]
+    private float CasterAngle = 0;
+    [SerializeField]
+    private float CamberAngle = 0;
+
+
+
+    private Vector3 strutTopPoint = Vector3.zero;
+    private Vector3 strutLowPoint = Vector3.zero;
 
     private Vector3 localRestPosition = Vector3.zero;
-    private Vector3 suspensionJointRelativeToCar = Vector3.zero;
 
 
 
     [SerializeField]
     private Rigidbody carBody = null;
-    private Rigidbody wheelBody = null;
+    private Rigidbody wheelBody = null;    
 
-    private List<Vector3> raycastVectors = new List<Vector3>();
-
+    
     void Awake()
+    {
+        Init();
+    }
+
+    void Init()
     {
         //carBody = this.transform.parent.GetComponent<Rigidbody>();
         wheelBody = this.gameObject.GetComponent<Rigidbody>();
@@ -46,11 +60,137 @@ public class WheelController : MonoBehaviour
             wheelBody = this.gameObject.AddComponent<Rigidbody>();
         }
         
+
         wheelBody.mass = wheelMass;
-        localRestPosition = wheelBody.transform.position - carBody.transform.position;
- 
-        //GenerateRaycastVectors();
+        localRestPosition = wheelBody.position - carBody.position;
+
+
+        strutTopPoint = Quaternion.AngleAxis(-CasterAngle, Vector3.right) *
+                        Quaternion.AngleAxis(CamberAngle, this.transform.forward) *
+                        (this.transform.up * StrutToTop) + localRestPosition;
+        strutLowPoint = Quaternion.AngleAxis(-CasterAngle, Vector3.right) *
+                        Quaternion.AngleAxis(CamberAngle, this.transform.forward) *
+                        (this.transform.up * StrutToBottom) + localRestPosition;
+
+
+        
+        inited = true;
     }
+
+
+    
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+
+
+    // Update is called once per frame
+    void FixedUpdate()
+    {
+        ApplyConstraints();
+    }
+
+
+    void ApplyConstraints()
+    {
+        Vector3 wheelVerticalOffset = Vector3.zero;
+        Vector3 wheelHorizontalOffset = Vector3.zero;
+
+
+        Vector3 localWheelPos = wheelBody.transform.position - carBody.transform.position;
+        Vector3 wheelOffset = (localWheelPos - carBody.rotation * localRestPosition);
+        wheelHorizontalOffset = Vector3.ProjectOnPlane(wheelOffset, carBody.rotation * (strutTopPoint - strutLowPoint) );
+        wheelBody.position -= wheelHorizontalOffset;
+
+        Vector3 relativeWheelVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(carBody.position + carBody.rotation * localRestPosition);
+        Vector3 horizontalPartVelocity = Vector3.ProjectOnPlane(relativeWheelVelocity, carBody.rotation * (strutTopPoint - strutLowPoint) );
+        Vector3 horizontalPartGravity = Vector3.ProjectOnPlane(Physics.gravity, carBody.rotation * (strutTopPoint - strutLowPoint) );
+        wheelBody.AddForce(-horizontalPartGravity);
+        wheelBody.velocity -= horizontalPartVelocity * Time.deltaTime;
+        
+
+
+
+        Vector3 wheelPositionOnStrut =  Quaternion.FromToRotation( carBody.rotation * (strutTopPoint - strutLowPoint), Vector3.up) * 
+                                        wheelOffset - wheelHorizontalOffset;
+
+        if (wheelPositionOnStrut.y <= StrutToBottom) 
+        {
+            Vector3 wheelLocalPosition = wheelBody.position - carBody.position;
+            wheelVerticalOffset = wheelLocalPosition - carBody.rotation * strutLowPoint;
+            wheelBody.position -= wheelVerticalOffset;
+
+            Vector3 verticalPartVelocity = relativeWheelVelocity - horizontalPartVelocity;
+            wheelBody.velocity -= verticalPartVelocity * Time.deltaTime;
+
+            Vector3 verticalPartGravity = Vector3.Project(Physics.gravity, carBody.rotation * (strutTopPoint - strutLowPoint));
+            wheelBody.AddForce(-verticalPartGravity);
+
+
+            Debug.DrawRay(carBody.position + carBody.rotation * strutLowPoint, wheelVerticalOffset, Color.magenta, Time.deltaTime);
+        }
+
+        if (wheelPositionOnStrut.y >= StrutToTop) 
+        {
+            Vector3 wheelLocalPosition = wheelBody.position - carBody.position;
+            wheelVerticalOffset = wheelLocalPosition - carBody.rotation * strutTopPoint;
+            wheelBody.position -= wheelVerticalOffset;
+
+            Vector3 verticalPartVelocity = relativeWheelVelocity - horizontalPartVelocity;
+            wheelBody.velocity -= verticalPartVelocity * Time.deltaTime;
+
+            Vector3 verticalPartGravity = Vector3.Project(Physics.gravity, carBody.rotation * (strutTopPoint - strutLowPoint));
+            wheelBody.AddForce(-verticalPartGravity);
+
+
+            Debug.DrawRay(carBody.position + carBody.rotation * strutTopPoint, wheelVerticalOffset, Color.magenta, Time.deltaTime);
+        }
+
+        
+        
+        
+        Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, wheelHorizontalOffset, Color.blue, Time.deltaTime);
+    }
+
+
+
+    void OnDrawGizmos()
+    {
+        Handles.color = Color.green;
+
+        Handles.DrawWireDisc(this.transform.position, this.transform.right, wheelRadius);
+
+
+        if (inited)
+            Handles.DrawLine(   carBody.position + carBody.rotation * strutTopPoint,
+                                carBody.position + carBody.rotation * strutLowPoint );
+
+
+
+
+        if (!inited) {
+
+            localRestPosition = this.transform.position - carBody.position;
+
+            strutTopPoint = Quaternion.AngleAxis(-CasterAngle, Vector3.right) *
+                            Quaternion.AngleAxis(CamberAngle, this.transform.forward) *
+                            (this.transform.up * StrutToTop) + localRestPosition;
+            strutLowPoint = Quaternion.AngleAxis(-CasterAngle, Vector3.right) *
+                            Quaternion.AngleAxis(CamberAngle, this.transform.forward) *
+                            (this.transform.up * StrutToBottom) + localRestPosition;
+
+
+
+            Handles.DrawLine(   carBody.position + strutTopPoint,
+                                carBody.position + strutLowPoint );
+        }
+    }
+}
+
+/*
 
     void GenerateRaycastVectors()
     {
@@ -74,22 +214,6 @@ public class WheelController : MonoBehaviour
         Debug.Log(raycastVectors.Count);
     }
 
-    
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-
-
-    // Update is called once per frame
-    void FixedUpdate()
-    {
-        CastRays();
-
-        ApplyForces();
-    }
 
 
     void CastRays()
@@ -115,13 +239,15 @@ public class WheelController : MonoBehaviour
             wheelBody.AddForceAtPosition(normalForce, this.transform.position);
 
             Debug.DrawRay(hit.point, normalForce, Color.red, 10);
-        }*/
+        }
     }
 
 
     void ApplyForces()
     {
         CalculateSuspension();
+
+
     }
 
 
@@ -164,19 +290,4 @@ public class WheelController : MonoBehaviour
         Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, -springForce, Color.red, Time.deltaTime);
         Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, horizontalOffset, Color.yellow, Time.deltaTime);
     }
-
-
-
-    void OnDrawGizmos()
-    {
-        Handles.color = Color.green;
-
-        /*foreach (Vector3 vec in raycastVectors)
-        {
-            Handles.DrawLine(this.transform.position, this.transform.position + vec);
-        }*/
-
-
-        Handles.DrawWireDisc(this.transform.position, this.transform.right, wheelRadius);
-    }
-}
+*/    
