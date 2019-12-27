@@ -105,11 +105,14 @@ public class WheelController : MonoBehaviour
         wheelHorizontalOffset = Vector3.ProjectOnPlane(wheelOffset, carBody.rotation * (strutTopPoint - strutLowPoint) );
         wheelBody.position -= wheelHorizontalOffset;
 
-        Vector3 relativeWheelVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(carBody.position + carBody.rotation * localRestPosition);
+        Vector3 relativeWheelVelocity = wheelBody.velocity - carBody.GetPointVelocity(carBody.position + carBody.rotation * localRestPosition);
         Vector3 horizontalPartVelocity = Vector3.ProjectOnPlane(relativeWheelVelocity, carBody.rotation * (strutTopPoint - strutLowPoint) );
-        Vector3 horizontalPartGravity = Vector3.ProjectOnPlane(Physics.gravity, carBody.rotation * (strutTopPoint - strutLowPoint) );
-        wheelBody.AddForce(-horizontalPartGravity);
-        wheelBody.velocity -= horizontalPartVelocity * Time.deltaTime;
+        wheelBody.velocity -= horizontalPartVelocity;
+
+        //Vector3 horizontalPartGravity = Vector3.ProjectOnPlane(Physics.gravity, carBody.rotation * (strutTopPoint - strutLowPoint) );
+        //heelBody.AddForce(-horizontalPartGravity);
+
+        Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, horizontalPartVelocity, Color.red, Time.deltaTime);
         
 
 
@@ -124,10 +127,7 @@ public class WheelController : MonoBehaviour
             wheelBody.position -= wheelVerticalOffset;
 
             Vector3 verticalPartVelocity = relativeWheelVelocity - horizontalPartVelocity;
-            wheelBody.velocity -= verticalPartVelocity * Time.deltaTime;
-
-            Vector3 verticalPartGravity = Vector3.Project(Physics.gravity, carBody.rotation * (strutTopPoint - strutLowPoint));
-            wheelBody.AddForce(-verticalPartGravity);
+            wheelBody.velocity -= verticalPartVelocity;
 
 
             Debug.DrawRay(carBody.position + carBody.rotation * strutLowPoint, wheelVerticalOffset, Color.magenta, Time.deltaTime);
@@ -140,10 +140,10 @@ public class WheelController : MonoBehaviour
             wheelBody.position -= wheelVerticalOffset;
 
             Vector3 verticalPartVelocity = relativeWheelVelocity - horizontalPartVelocity;
-            wheelBody.velocity -= verticalPartVelocity * Time.deltaTime;
+            wheelBody.velocity -= verticalPartVelocity;
 
-            Vector3 verticalPartGravity = Vector3.Project(Physics.gravity, carBody.rotation * (strutTopPoint - strutLowPoint));
-            wheelBody.AddForce(-verticalPartGravity);
+            //Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, relativeWheelVelocity, Color.red, Time.deltaTime);
+
 
 
             Debug.DrawRay(carBody.position + carBody.rotation * strutTopPoint, wheelVerticalOffset, Color.magenta, Time.deltaTime);
@@ -159,7 +159,7 @@ public class WheelController : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        Handles.color = Color.green;
+        Handles.color = Color.black;
 
         Handles.DrawWireDisc(this.transform.position, this.transform.right, wheelRadius);
 
