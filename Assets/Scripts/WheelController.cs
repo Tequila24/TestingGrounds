@@ -46,6 +46,10 @@ public class WheelController : MonoBehaviour
     private Rigidbody carBody = null;
     private Rigidbody wheelBody = null;    
 
+
+
+    private bool isWheelRight;
+
     
     void Awake()
     {
@@ -73,6 +77,15 @@ public class WheelController : MonoBehaviour
                         (this.transform.up * StrutToBottom) + localRestPosition;
 
 
+        float angleBetweenAxis = Vector3.Angle(carBody.transform.right, wheelBody.transform.right);
+        if (angleBetweenAxis > 90) {
+            //wheel is left
+            isWheelRight = false;
+        } else {
+            //wheel is right
+            isWheelRight = true;
+        }
+        print(isWheelRight);
         
         inited = true;
     }
@@ -95,6 +108,13 @@ public class WheelController : MonoBehaviour
 
 
     void ApplyConstraints()
+    {
+        ApplyStrutConstraint();
+
+        ApplyAxisConstraint();
+    }
+
+    void ApplyStrutConstraint()
     {
         Vector3 wheelVerticalOffset = Vector3.zero;
         Vector3 wheelHorizontalOffset = Vector3.zero;
@@ -153,6 +173,54 @@ public class WheelController : MonoBehaviour
         
         
         Debug.DrawRay(carBody.position + carBody.rotation * localRestPosition, wheelHorizontalOffset, Color.blue, Time.deltaTime);
+    }
+
+    void ApplyAxisConstraint()
+    {
+        
+        Vector3 wheelAxis;
+        if (isWheelRight)
+            wheelAxis = -carBody.transform.right;
+        else
+            wheelAxis = carBody.transform.right;
+
+        float angleToAxis = Vector3.Angle(this.transform.right, wheelAxis);
+        //print(angleToAxis);
+
+
+
+        // ROTATION OFFSET
+        // find offset
+        Quaternion wheelRotationOffset = Quaternion.FromToRotation(this.transform.right, wheelAxis);
+        // remove offset
+        wheelBody.rotation = wheelRotationOffset * wheelBody.rotation;
+
+
+
+
+        // RELATIVE VELOCITY 
+        // find relativeVelocity 
+        // remove relative angular velocity
+        Vector3 wheelAngularVelocity = wheelBody.angularVelocity;
+        Vector3 carAngularVelocity = carBody.angularVelocity;
+        
+        //wheelBody.angularVelocity.Set(wheelAngularVelocity.x + carAngularVelocity.x, carAngularVelocity.y, carAngularVelocity.z);
+        Vector3 transformedRotation = Vector3.ProjectOnPlane(wheelBody.angularVelocity, wheelAxis);
+        
+        wheelBody.angularVelocity = wheelRotationOffset * wheelBody.angularVelocity - transformedRotation;
+
+        print(wheelBody.angularVelocity);
+        print(transformedRotation);
+
+
+
+
+
+        // fix me
+        wheelBody.AddTorque(carBody.transform.right * Input.GetAxisRaw("Vertical") * wheelBody.mass * 100);
+        //carBody.AddTorque(carBody.transform.right * Input.GetAxisRaw("Vertical") * carBody.mass * 100);
+
+        Debug.DrawRay(carBody.transform.right, wheelAxis*3, Color.blue, Time.deltaTime);
     }
 
 
