@@ -48,6 +48,17 @@ public class WheelController : MonoBehaviour
 
 
 
+
+    [SerializeField]
+    private float Kp = 1;
+    [SerializeField]
+    private float Ki = 1;
+    [SerializeField]
+    private float Kd = 1;
+
+    MyPID forcePID;
+
+
     private bool isWheelRight;
 
     
@@ -85,6 +96,12 @@ public class WheelController : MonoBehaviour
             //wheel is right
             isWheelRight = true;
         }
+
+
+        forcePID = new MyPID(1000f, 10f, 200f);
+
+
+
         
         inited = true;
     }
@@ -102,6 +119,10 @@ public class WheelController : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        forcePID.Kp = Kp;
+        forcePID.Ki = Ki;
+        forcePID.Kd = Kd;
+
         ApplyConstraints();
     }
 
@@ -117,21 +138,31 @@ public class WheelController : MonoBehaviour
     {
         Vector3 localWheelPos = wheelBody.transform.position - carBody.transform.position;
         Vector3 strutVector = strutTopPoint - strutBottomPoint;
-
-
-
         Vector3 offsetFromRestPoint = localRestPoint - localWheelPos;
-        Vector3 horizontalOffsetFromRestPoint = Vector3.ProjectOnPlane(offsetFromRestPoint, strutVector);
- 
 
-        Vector3 verticalVelocity = Vector3.Project(wheelBody.velocity, strutVector);
-        Vector3 horizontalVelocity = wheelBody.velocity - verticalVelocity;
+        Vector3 relativeVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
+        Vector3 horizontalVelocityToStrut = Vector3.ProjectOnPlane(relativeVelocity, strutVector);
+        Vector3 verticalVelocityToStrut = Vector3.Project(relativeVelocity, strutVector);
 
-        wheelBody.velocity = verticalVelocity;
- 
+        if (    Vector3.Angle(offsetFromRestPoint, horizontalVelocityToStrut)   > 90) 
+            wheelBody.velocity -= horizontalVelocityToStrut;
+
+        Vector3 positionOnStrut = Quaternion.FromToRotation(strutVector, Vector3.up) * Vector3.Project(offsetFromRestPoint, strutVector);
+        print(positionOnStrut.y);
+        if (positionOnStrut.y > StrutToTop)
+        {
+            if (    Vector3.Angle(offsetFromRestPoint, verticalVelocityToStrut)   > 90) 
+                wheelBody.velocity -= verticalVelocityToStrut;
+        } else if (positionOnStrut.y > StrutToBottom)
+        {
+            if (    Vector3.Angle(offsetFromRestPoint, verticalVelocityToStrut)   > 90) 
+                wheelBody.velocity -= verticalVelocityToStrut;
+        }
+        
 
 
-        Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, horizontalVelocity, Color.magenta, Time.deltaTime);
+
+        Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, horizontalVelocityToStrut, Color.magenta, Time.deltaTime);
     }
 
     void ApplyAxisConstraint()

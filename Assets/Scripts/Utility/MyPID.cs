@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class MyPID
 {
-    public float Kp, Ki, Kd;
+    public float Kp=0, Ki=0, Kd = 0;
 
     private float lastError;
 
