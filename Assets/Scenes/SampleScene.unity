@@ -242,14 +242,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dc28133cf9880a4baae68520a42f056, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wheelRadius: 1
+  wheelRadius: 0.84
   wheelMass: 100
   dampingValue: 0.52
   springValue: 1
   StrutToTop: 1
   StrutToBottom: -1
-  CasterAngle: 20
-  CamberAngle: -6.9
+  CasterAngle: 0
+  CamberAngle: 0
   carBody: {fileID: 1244900174}
   Kp: 1
   Ki: 1
@@ -310,7 +310,7 @@ Rigidbody:
   m_Mass: 200
   m_Drag: 0
   m_AngularDrag: 0
-  m_UseGravity: 0
+  m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -376,14 +376,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dc28133cf9880a4baae68520a42f056, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wheelRadius: 1
+  wheelRadius: 0.84
   wheelMass: 100
   dampingValue: 0.52
   springValue: 1
   StrutToTop: 1
   StrutToBottom: -1
-  CasterAngle: -5
-  CamberAngle: -15.65
+  CasterAngle: 0
+  CamberAngle: 0
   carBody: {fileID: 1244900174}
   Kp: 1
   Ki: 1
@@ -444,7 +444,7 @@ Rigidbody:
   m_Mass: 200
   m_Drag: 0
   m_AngularDrag: 0
-  m_UseGravity: 0
+  m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -573,7 +573,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 746198812}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 39, y: 123.95, z: -115.32}
+  m_LocalPosition: {x: 39, y: 127.17, z: -115.32}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1244900173}
@@ -701,14 +701,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dc28133cf9880a4baae68520a42f056, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wheelRadius: 1
+  wheelRadius: 0.84
   wheelMass: 100
   dampingValue: 0.52
   springValue: 1
   StrutToTop: 1
   StrutToBottom: -1
-  CasterAngle: 20
-  CamberAngle: -6.9
+  CasterAngle: 0
+  CamberAngle: 0
   carBody: {fileID: 1244900174}
   Kp: 1
   Ki: 1
@@ -769,7 +769,7 @@ Rigidbody:
   m_Mass: 200
   m_Drag: 0
   m_AngularDrag: 0
-  m_UseGravity: 0
+  m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -1033,7 +1033,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1244900169}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.75522614, y: 0.071640015, z: 0.100479126}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 394826619}
@@ -1055,10 +1055,10 @@ Rigidbody:
   m_Mass: 16000
   m_Drag: 0
   m_AngularDrag: 0
-  m_UseGravity: 0
+  m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 4
+  m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!1 &1805792649 stripped
 GameObject:
@@ -1141,14 +1141,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dc28133cf9880a4baae68520a42f056, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wheelRadius: 1
+  wheelRadius: 0.84
   wheelMass: 100
   dampingValue: 0.52
   springValue: 1
   StrutToTop: 1
   StrutToBottom: -1
-  CasterAngle: -5
-  CamberAngle: -15.65
+  CasterAngle: 0
+  CamberAngle: 0
   carBody: {fileID: 1244900174}
   Kp: 1
   Ki: 0.5
@@ -1209,7 +1209,7 @@ Rigidbody:
   m_Mass: 200
   m_Drag: 0
   m_AngularDrag: 0
-  m_UseGravity: 0
+  m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -1242,7 +1242,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2140500275}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 40.356, y: 129.83, z: -118.635}
+  m_LocalPosition: {x: 42.03, y: 130.02, z: -118.635}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
