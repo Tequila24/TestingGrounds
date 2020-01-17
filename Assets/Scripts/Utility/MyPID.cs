@@ -6,7 +6,7 @@ public class MyPID
 {
     public float Kp=0, Ki=0, Kd = 0;
 
-    private float lastError;
+    private float lastError = 0;
 
     private float P, I, D;
 

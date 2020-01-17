@@ -37,31 +37,23 @@ public class WheelController : MonoBehaviour
 
     private Vector3 strutTopPoint = Vector3.zero;
     private Vector3 strutBottomPoint = Vector3.zero;
-
     private Vector3 localRestPoint = Vector3.zero;
 
+    private Vector3 localWheelPos = Vector3.zero;
+    private Vector3 strutVector = Vector3.zero;
+    private Vector3 offsetFromRestPoint = Vector3.zero;
 
 
-    [SerializeField]
     private Rigidbody carBody = null;
-    private Rigidbody wheelBody = null;    
-
-
-
-
-    [SerializeField]
-    private float Kp = 1;
-    [SerializeField]
-    private float Ki = 1;
-    [SerializeField]
-    private float Kd = 1;
-
-    MyPID forcePID;
-
+    private Rigidbody wheelBody = null;
+    private Collider wheelCollider = null;
+    
 
     private bool isWheelRight;
-
     
+
+
+
     void Awake()
     {
         Init();
@@ -69,11 +61,12 @@ public class WheelController : MonoBehaviour
 
     void Init()
     {
-        //carBody = this.transform.parent.GetComponent<Rigidbody>();
+        carBody = this.transform.parent.GetComponent<Rigidbody>();
         wheelBody = this.gameObject.GetComponent<Rigidbody>();
         if (wheelBody == null) {
             wheelBody = this.gameObject.AddComponent<Rigidbody>();
         }
+        wheelCollider = this.gameObject.GetComponent<MeshCollider>();
         
 
         wheelBody.mass = wheelMass;
@@ -98,10 +91,7 @@ public class WheelController : MonoBehaviour
             //wheel is right
             isWheelRight = true;
         }
-
-
-        forcePID = new MyPID(1000f, 10f, 200f);
-
+        
 
 
         
@@ -121,72 +111,78 @@ public class WheelController : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        forcePID.Kp = Kp;
-        forcePID.Ki = Ki;
-        forcePID.Kd = Kd;
+        UpdateValues();
 
-
-        ApplyDampingForce();
-    }
-
-    void Update()
-    {
         ApplyStrutConstraint();
 
-        ApplyAxisConstraint();
+        //ApplyAxisConstraint();
+
+        //ApplyDampingForce();
+
+        //ApplySpringForce();
     }
 
+    void UpdateValues()
+    {
+        localWheelPos = wheelBody.position - carBody.position;
+        strutVector = (carBody.rotation * (strutBottomPoint - strutTopPoint)).normalized;
+        offsetFromRestPoint =   carBody.rotation * localRestPoint - localWheelPos + 
+                                wheelBody.velocity * Time.deltaTime;
+
+
+    }
 
     void ApplyStrutConstraint()
     {
-        Vector3 localWheelPos = wheelBody.transform.position - carBody.transform.position;
-        Vector3 strutVector = carBody.rotation * (strutTopPoint - strutBottomPoint);
-        Vector3 offsetFromRestPoint = carBody.rotation * localRestPoint - localWheelPos;
-        Vector3 horizontalOffsetFromStrut = Vector3.ProjectOnPlane(offsetFromRestPoint, strutVector);
+        Vector3 HOffset = GetHOffsetForPos(offsetFromRestPoint);
+        Vector3 VOffset = GetVOffsetForPos(offsetFromRestPoint);
+        Vector3 velocityInFrame = GetRelativeVelocity();
+        print(velocityInFrame * Time.deltaTime);
+        
+        Vector3 VOffsetInNextStep = GetVOffsetForPos(offsetFromRestPoint - velocityInFrame * Time.deltaTime);
+        if (VOffsetInNextStep.sqrMagnitude > 0) 
+        {
+            print("VOffsetInNext " + VOffsetInNextStep);
+            print("VOffset " + VOffset);
+            print("Diff: " + (VOffset - VOffsetInNextStep).sqrMagnitude);
 
+            Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, Vector3.forward, Color.green, 10);
+            Debug.DrawRay(wheelBody.position, Vector3.forward, Color.red, 10);
+            Debug.DrawRay(wheelBody.position + velocityInFrame * Time.deltaTime, -Vector3.forward, Color.blue, 10);
 
-        Vector3 relativeVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
-        Vector3 horizontalVelocityToStrut = Vector3.ProjectOnPlane(relativeVelocity, strutVector);
-        Vector3 verticalVelocityToStrut = Vector3.Project(relativeVelocity, strutVector);
-
-
-        // HORIZONTAL
-        if ( Vector3.Angle(offsetFromRestPoint, horizontalVelocityToStrut) > 90) {
-            wheelBody.velocity -= horizontalVelocityToStrut;
+            Debug.Break();
         }
-        //wheelBody.AddForce(horizontalOffsetFromStrut, ForceMode.Impulse);
-        //carBody.AddForceAtPosition(horizontalOffsetFromStrut*0.5f, wheelBody.position, ForceMode.Impulse);
+        
+    }
 
+    Vector3 GetHOffsetForPos(Vector3 newOffset)
+    {
+        Vector3 horizontalOffsetFromStrut = Vector3.ProjectOnPlane(newOffset, strutVector);
 
-        // VERTICAL
-        Vector3 positionOnStrut = Quaternion.FromToRotation(strutVector, Vector3.up) * Vector3.Project(offsetFromRestPoint, strutVector);
+        return horizontalOffsetFromStrut;
+    }
 
+    Vector3 GetVOffsetForPos(Vector3 newOffset)
+    {
+        Vector3 verticalOffsetFromStrut = Vector3.zero;
+
+        Vector3 positionOnStrut = Quaternion.FromToRotation(strutVector, Vector3.up) * Vector3.Project(newOffset, strutVector);
         if (positionOnStrut.y > StrutToTop)
         {
-            if (Vector3.Angle(offsetFromRestPoint, verticalVelocityToStrut) > 90) 
-                wheelBody.velocity -= verticalVelocityToStrut;
-
-            /*Vector3 verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutTopPoint - localWheelPos, strutVector);
-            wheelBody.AddForce(verticalOffsetFromStrut, ForceMode.Impulse);*/
-            wheelBody.MovePosition(carBody.position + carBody.rotation * strutBottomPoint);
-        } else
+            verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutTopPoint - localWheelPos, strutVector);
+        }
         if (positionOnStrut.y < StrutToBottom)
         {
-            if (Vector3.Angle(offsetFromRestPoint, verticalVelocityToStrut) > 90) 
-                wheelBody.velocity -= verticalVelocityToStrut;
-
-            /*Vector3 verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutBottomPoint - localWheelPos, strutVector);
-            wheelBody.AddForce(verticalOffsetFromStrut, ForceMode.Impulse);*/
-            wheelBody.MovePosition(carBody.position + carBody.rotation * strutTopPoint);
+            verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutBottomPoint - localWheelPos, strutVector);
         }
-        
-        //print(relativeVelocity - horizontalVelocityToStrut - verticalVelocityToStrut);
-        print(wheelBody.velocity);
-        print(carBody.GetRelativePointVelocity(localWheelPos));
-        
-        
-        //Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, horizontalOffsetFromStrut, Color.magenta, Time.deltaTime);
-        //Debug.DrawRay(wheelBody.position, horizontalOffsetFromStrut, Color.magenta, Time.deltaTime);
+
+        return verticalOffsetFromStrut;
+    }
+
+    Vector3 GetRelativeVelocity()
+    {
+        Vector3 relativeVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
+        return relativeVelocity;
     }
 
     void ApplyAxisConstraint()
@@ -236,16 +232,29 @@ public class WheelController : MonoBehaviour
 
     void ApplyDampingForce()
     {
-        Vector3 localWheelPos = wheelBody.transform.position - carBody.transform.position;
+        Vector3 localWheelPos = wheelBody.position - carBody.position;
         Vector3 relativeVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
         Vector3 dampingAcceleration = relativeVelocity * dampingValue;
 
-        //wheelBody.AddForce(-dampingAcceleration, ForceMode.Impulse);
-        //carBody.AddForceAtPosition(dampingAcceleration, carBody.position + carBody.rotation * localRestPoint, ForceMode.Impulse);
-
-
-        //Debug.DrawRay(wheelBody.position, dampingAcceleration*10, Color.magenta, Time.deltaTime);
+        wheelBody.AddForce(-dampingAcceleration * Time.deltaTime, ForceMode.VelocityChange);
+        carBody.AddForceAtPosition(dampingAcceleration * Time.deltaTime, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
     }
+
+    void ApplySpringForce()
+    {
+        Vector3 localWheelPos = wheelBody.position - carBody.position;
+        Vector3 strutVector = (carBody.rotation * (strutBottomPoint - strutTopPoint)).normalized;
+        Vector3 localOffset = localWheelPos - localRestPoint;
+
+        Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, localOffset, Color.red, Time.deltaTime);
+
+        Vector3 springForce = localOffset * springValue;
+        wheelBody.AddForce(-springForce);
+        carBody.AddForceAtPosition(springForce, carBody.position + carBody.rotation * localRestPoint);
+
+        
+    }
+
 
 
     void OnDrawGizmos()
@@ -264,7 +273,7 @@ public class WheelController : MonoBehaviour
 
         if (!inited) {
 
-            localRestPoint = this.transform.position - carBody.position;
+            localRestPoint = this.transform.position;
 
             strutTopPoint = Quaternion.AngleAxis(-CasterAngle, Vector3.right) *
                             Quaternion.AngleAxis(CamberAngle, this.transform.forward) *
@@ -275,13 +284,68 @@ public class WheelController : MonoBehaviour
 
 
 
-            Handles.DrawLine(   carBody.position + strutTopPoint,
-                                carBody.position + strutBottomPoint );
+            Handles.DrawLine(   strutTopPoint,
+                                strutBottomPoint );
         }
     }
 }
 
 /*
+
+    void ApplyStrutConstraint()
+    {
+        Vector3 localWheelPos = wheelBody.transform.position - carBody.transform.position;
+        Vector3 strutVector = carBody.rotation * (strutTopPoint - strutBottomPoint);
+        Vector3 offsetFromRestPoint = carBody.rotation * localRestPoint - localWheelPos;
+        Vector3 horizontalOffsetFromStrut = GetHOffset();
+
+
+        Vector3 relativeVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
+        Vector3 horizontalVelocityToStrut = Vector3.ProjectOnPlane(relativeVelocity, strutVector);
+        Vector3 verticalVelocityToStrut = Vector3.Project(relativeVelocity, strutVector);
+
+
+        // HORIZONTAL
+        if ( Vector3.Angle(offsetFromRestPoint, horizontalVelocityToStrut) > 90) {
+            wheelBody.velocity -= horizontalVelocityToStrut * 0.5f;
+            carBody.AddForceAtPosition(horizontalVelocityToStrut * 0.5f * Time.deltaTime, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+        }
+
+        Vector3 offsetForce = horizontalOffsetFromStrut * 5 * 0.5f;
+        wheelBody.AddForce(offsetForce, ForceMode.VelocityChange);
+        carBody.AddForceAtPosition(-offsetForce, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+
+
+
+
+        // VERTICAL
+        Vector3 positionOnStrut = Quaternion.FromToRotation(strutVector, Vector3.up) * Vector3.Project(offsetFromRestPoint, strutVector);
+
+        if (positionOnStrut.y > StrutToTop)
+        {
+            if (Vector3.Angle(offsetFromRestPoint, verticalVelocityToStrut) > 90) {
+                wheelBody.velocity -= verticalVelocityToStrut;
+                carBody.AddForceAtPosition(verticalVelocityToStrut * 0.5f * Time.deltaTime, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+            }
+
+            Vector3 verticalOffsetFromStrut = GetVOffset();
+            wheelBody.AddForce(verticalOffsetFromStrut, ForceMode.VelocityChange);
+        } else
+        if (positionOnStrut.y < StrutToBottom)
+        {
+            if (Vector3.Angle(offsetFromRestPoint, verticalVelocityToStrut) > 90) {
+                wheelBody.velocity -= verticalVelocityToStrut;
+                carBody.AddForceAtPosition(verticalVelocityToStrut * 0.5f * Time.deltaTime, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+            }
+
+            Vector3 verticalOffsetFromStrut = GetVOffset();
+            wheelBody.AddForce(verticalOffsetFromStrut, ForceMode.VelocityChange);
+        }
+
+
+        Debug.DrawRay( wheelBody.position, GetHOffset() + GetVOffset(), Color.magenta, Time.deltaTime);
+    }
+
 
     void ApplyStrutConstraint()
     {
