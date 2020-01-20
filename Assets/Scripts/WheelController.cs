@@ -45,12 +45,12 @@ public class WheelController : MonoBehaviour
 
 
     private Rigidbody carBody = null;
-    private Rigidbody wheelBody = null;
+    private Transform wheelBody = null;
     private Collider wheelCollider = null;
-    
+    private Vector3 halfBoundingBoxSize;
 
     private bool isWheelRight;
-    
+    private Collider[] surfaces;
 
 
 
@@ -62,14 +62,16 @@ public class WheelController : MonoBehaviour
     void Init()
     {
         carBody = this.transform.parent.GetComponent<Rigidbody>();
-        wheelBody = this.gameObject.GetComponent<Rigidbody>();
-        if (wheelBody == null) {
+        wheelBody = this.gameObject.transform;
+
+        halfBoundingBoxSize = GetComponent<MeshFilter>().mesh.bounds.size * 0.5f;
+        //wheelBody = this.gameObject.GetComponent<Rigidbody>();
+        /*if (wheelBody == null) {
             wheelBody = this.gameObject.AddComponent<Rigidbody>();
-        }
+        }*/
         wheelCollider = this.gameObject.GetComponent<MeshCollider>();
         
 
-        wheelBody.mass = wheelMass;
         localRestPoint = wheelBody.position - carBody.position;
 
 
@@ -82,6 +84,7 @@ public class WheelController : MonoBehaviour
                             Quaternion.AngleAxis(CamberAngle, this.transform.forward) *
                             (this.transform.up * StrutToBottom) + localRestPoint;
 
+        surfaces = new Collider[16];
 
         float angleBetweenAxis = Vector3.Angle(carBody.transform.right, wheelBody.transform.right);
         if (angleBetweenAxis > 90) {
@@ -126,8 +129,7 @@ public class WheelController : MonoBehaviour
     {
         localWheelPos = wheelBody.position - carBody.position;
         strutVector = (carBody.rotation * (strutBottomPoint - strutTopPoint)).normalized;
-        offsetFromRestPoint =   carBody.rotation * localRestPoint - localWheelPos + 
-                                wheelBody.velocity * Time.deltaTime;
+        offsetFromRestPoint =   carBody.rotation * localRestPoint - localWheelPos;
 
 
     }
@@ -137,9 +139,8 @@ public class WheelController : MonoBehaviour
         Vector3 HOffset = GetHOffsetForPos(offsetFromRestPoint);
         Vector3 VOffset = GetVOffsetForPos(offsetFromRestPoint);
         Vector3 velocityInFrame = GetRelativeVelocity();
-        print(velocityInFrame * Time.deltaTime);
         
-        Vector3 VOffsetInNextStep = GetVOffsetForPos(offsetFromRestPoint - velocityInFrame * Time.deltaTime);
+        /*Vector3 VOffsetInNextStep = GetVOffsetForPos(offsetFromRestPoint - velocityInFrame * Time.deltaTime);
         if (VOffsetInNextStep.sqrMagnitude > 0) 
         {
             print("VOffsetInNext " + VOffsetInNextStep);
@@ -151,6 +152,32 @@ public class WheelController : MonoBehaviour
             Debug.DrawRay(wheelBody.position + velocityInFrame * Time.deltaTime, -Vector3.forward, Color.blue, 10);
 
             Debug.Break();
+        }*/
+
+        int count = Physics.OverlapSphereNonAlloc(wheelBody.position, wheelRadius, surfaces);
+
+        for (int i=0; i<count; ++i)
+        {
+            Collider collider = surfaces[i];
+
+            if (collider == wheelCollider)
+                continue;
+
+            Vector3 otherPosition = collider.gameObject.transform.position;
+            Quaternion otherRotation = collider.gameObject.transform.rotation;
+            Vector3 direction;
+            float distance;
+            
+            bool overlapped = Physics.ComputePenetration(   wheelCollider, wheelBody.position, wheelBody.rotation,
+                                                            collider, otherPosition, otherRotation,
+                                                            out direction, out distance);
+
+            if (overlapped)
+            {
+                Handles.color = Color.red;
+                Vector3 closestPoint = Physics.ClosestPoint(wheelBody.position + direction * wheelRadius, collider, otherPosition, otherRotation);
+                Debug.DrawRay(closestPoint, direction, Color.red, 10);
+            }
         }
         
     }
@@ -181,13 +208,13 @@ public class WheelController : MonoBehaviour
 
     Vector3 GetRelativeVelocity()
     {
-        Vector3 relativeVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
+        Vector3 relativeVelocity = Vector3.zero;//wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
         return relativeVelocity;
     }
 
     void ApplyAxisConstraint()
     {
-        
+        /*
         Vector3 wheelAxis;
         if (isWheelRight)
             wheelAxis = -carBody.transform.right;
@@ -228,20 +255,24 @@ public class WheelController : MonoBehaviour
         //carBody.AddTorque(carBody.transform.right * Input.GetAxisRaw("Vertical") * carBody.mass * 100);
 
         Debug.DrawRay(carBody.transform.right, wheelAxis*3, Color.blue, Time.deltaTime);
+        */
     }
 
     void ApplyDampingForce()
     {
+        /*
         Vector3 localWheelPos = wheelBody.position - carBody.position;
         Vector3 relativeVelocity = wheelBody.velocity - carBody.GetRelativePointVelocity(localWheelPos);
         Vector3 dampingAcceleration = relativeVelocity * dampingValue;
 
         wheelBody.AddForce(-dampingAcceleration * Time.deltaTime, ForceMode.VelocityChange);
         carBody.AddForceAtPosition(dampingAcceleration * Time.deltaTime, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+        */
     }
 
     void ApplySpringForce()
     {
+        /*
         Vector3 localWheelPos = wheelBody.position - carBody.position;
         Vector3 strutVector = (carBody.rotation * (strutBottomPoint - strutTopPoint)).normalized;
         Vector3 localOffset = localWheelPos - localRestPoint;
@@ -252,7 +283,7 @@ public class WheelController : MonoBehaviour
         wheelBody.AddForce(-springForce);
         carBody.AddForceAtPosition(springForce, carBody.position + carBody.rotation * localRestPoint);
 
-        
+        */
     }
 
 
