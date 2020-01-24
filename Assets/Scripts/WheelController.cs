@@ -119,8 +119,10 @@ public class WheelController : MonoBehaviour
         Vector3 depenetrationInNextFrame = Vector3.zero;
 
         if (depenetrationInThisFrame.sqrMagnitude > 0) {
+
             wheelVelocity = Vector3.zero;
             wheelBody.position += depenetrationInThisFrame;
+
         } else {
             
             springAccelerationInFrame = GetSpringAcceleration() * Time.deltaTime;
@@ -128,24 +130,20 @@ public class WheelController : MonoBehaviour
 
 
             Vector3 correctedSpringAcceleration;
+            
             correctedSpringAcceleration = springAccelerationInFrame + depenetrationInNextFrame;
-
-            //Debug.DrawRay(wheelBody.position - wheelBody.right*0.1f + wheelBody.forward*0.05f, springAccelerationInFrame, Color.red, Time.deltaTime, false);
-            Debug.DrawRay(wheelBody.position - wheelBody.right*0.2f + wheelBody.forward*0.1f, depenetrationInNextFrame, Color.blue, Time.deltaTime, false);
-            //Debug.DrawRay(wheelBody.position - wheelBody.right*0.3f + wheelBody.forward*0.15f, correctedSpringAcceleration, Color.green, Time.deltaTime, false);
-
-
             wheelVelocity += correctedSpringAcceleration;
-
-            wheelVelocity = GetDampedVelocity(wheelVelocity);
-
             wheelBody.position += wheelVelocity;
             
+            wheelVelocity = GetDampedVelocity(wheelVelocity);
+
+
+            Debug.DrawRay(wheelBody.position - wheelBody.right*0.1f + wheelBody.forward*0.05f, springAccelerationInFrame, Color.red, Time.deltaTime, false);
+            Debug.DrawRay(wheelBody.position - wheelBody.right*0.2f + wheelBody.forward*0.1f, depenetrationInNextFrame, Color.blue, Time.deltaTime, false);
+            Debug.DrawRay(wheelBody.position - wheelBody.right*0.3f + wheelBody.forward*0.15f, correctedSpringAcceleration, Color.green, Time.deltaTime, false);
+            Debug.DrawRay(wheelBody.position - wheelBody.right*0.4f + wheelBody.forward*0.2f, wheelVelocity, Color.magenta, Time.deltaTime, false);            
         }
 
-        
-
-        //wheelBody.position += wheelVelocity * Time.deltaTime + depenetrationInThisFrame;
     }
 
     void UpdateValues()
