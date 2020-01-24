@@ -197,7 +197,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 103443061}
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 40.26, y: 126.237, z: -114.11}
+  m_LocalPosition: {x: 40.26, y: 123.96, z: -118.38}
   m_LocalScale: {x: 6.1894746, y: 2.4602535, z: 0.34197223}
   m_Children: []
   m_Father: {fileID: 0}
@@ -291,7 +291,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &339775957
 Transform:
   m_ObjectHideFlags: 0
@@ -335,9 +335,9 @@ MonoBehaviour:
   wheelRadius: 0.84
   wheelMass: 100
   dampingValue: 0.5
-  springValue: 5000
+  springValue: 1000
   StrutToTop: 1
-  StrutToBottom: -0.1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
   carBody: {fileID: 1244900174}
@@ -405,7 +405,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &394826619
 Transform:
   m_ObjectHideFlags: 0
@@ -448,10 +448,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   wheelRadius: 0.84
   wheelMass: 100
-  dampingValue: 0.88
-  springValue: 5000
+  dampingValue: 0.5
+  springValue: 1000
   StrutToTop: 1
-  StrutToBottom: -0.1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
   carBody: {fileID: 1244900174}
@@ -988,7 +988,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &927483524
 Transform:
   m_ObjectHideFlags: 0
@@ -1032,9 +1032,9 @@ MonoBehaviour:
   wheelRadius: 0.84
   wheelMass: 100
   dampingValue: 0.5
-  springValue: 5000
+  springValue: 1000
   StrutToTop: 1
-  StrutToBottom: -0.1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
   carBody: {fileID: 1244900174}
@@ -1365,7 +1365,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!114 &1244900175
 MonoBehaviour:
@@ -1490,7 +1490,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1569425891}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 38.419, y: 125.47, z: -110.078}
+  m_LocalPosition: {x: 42.5, y: 127.533, z: -116.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1670,10 +1670,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   wheelRadius: 0.84
   wheelMass: 100
-  dampingValue: 0.65
-  springValue: 5000
+  dampingValue: 0.5
+  springValue: 1000
   StrutToTop: 1
-  StrutToBottom: -0.1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
   carBody: {fileID: 1244900174}

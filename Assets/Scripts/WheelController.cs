@@ -9,6 +9,7 @@ public class WheelController : MonoBehaviour
 
     // killme
     bool inited = false;
+    private int counter = 0;
 
 
     [SerializeField]
@@ -113,36 +114,36 @@ public class WheelController : MonoBehaviour
     {
         UpdateValues();
 
-        Vector3 springAccelerationInFrame = GetSpringAcceleration();
-        Vector3 depenetrationInNextFrame = GetAllignedDepenetration(wheelBody.position + wheelVelocity*Time.deltaTime + springAccelerationInFrame);
         Vector3 depenetrationInThisFrame = GetAllignedDepenetration(wheelBody.position);
-        
-        Vector3 correctedSpringAcceleration;
-        print("Spring:"  + springAccelerationInFrame);
-        print("Depen:" + depenetrationInNextFrame);
-        if (depenetrationInNextFrame.sqrMagnitude < springAccelerationInFrame.sqrMagnitude) {
-            correctedSpringAcceleration = springAccelerationInFrame - depenetrationInNextFrame;
-        } else {
-            correctedSpringAcceleration = Vector3.zero;
-        }
-
-
-        wheelVelocity += correctedSpringAcceleration;
-
-        Debug.DrawRay(wheelBody.position - wheelBody.right*0.1f + wheelBody.forward*0.05f, springAccelerationInFrame, Color.red, Time.deltaTime, false);
-        Debug.DrawRay(wheelBody.position - wheelBody.right*0.2f + wheelBody.forward*0.1f, depenetrationInNextFrame, Color.blue, Time.deltaTime, false);
-        Debug.DrawRay(wheelBody.position - wheelBody.right*0.3f + wheelBody.forward*0.15f, correctedSpringAcceleration, Color.green, Time.deltaTime, false);
-
-        wheelVelocity = GetDampedVelocity(wheelVelocity);
-
-        print(wheelVelocity);
+        Vector3 springAccelerationInFrame = Vector3.zero;
+        Vector3 depenetrationInNextFrame = Vector3.zero;
 
         if (depenetrationInThisFrame.sqrMagnitude > 0) {
             wheelVelocity = Vector3.zero;
             wheelBody.position += depenetrationInThisFrame;
         } else {
-            //wheelBody.position += wheelVelocity * Time.deltaTime;
+            
+            springAccelerationInFrame = GetSpringAcceleration() * Time.deltaTime;
+            depenetrationInNextFrame = GetAllignedDepenetration(wheelBody.position + wheelVelocity + springAccelerationInFrame);
+
+
+            Vector3 correctedSpringAcceleration;
+            correctedSpringAcceleration = springAccelerationInFrame + depenetrationInNextFrame;
+
+            //Debug.DrawRay(wheelBody.position - wheelBody.right*0.1f + wheelBody.forward*0.05f, springAccelerationInFrame, Color.red, Time.deltaTime, false);
+            Debug.DrawRay(wheelBody.position - wheelBody.right*0.2f + wheelBody.forward*0.1f, depenetrationInNextFrame, Color.blue, Time.deltaTime, false);
+            //Debug.DrawRay(wheelBody.position - wheelBody.right*0.3f + wheelBody.forward*0.15f, correctedSpringAcceleration, Color.green, Time.deltaTime, false);
+
+
+            wheelVelocity += correctedSpringAcceleration;
+
+            wheelVelocity = GetDampedVelocity(wheelVelocity);
+
+            wheelBody.position += wheelVelocity;
+            
         }
+
+        
 
         //wheelBody.position += wheelVelocity * Time.deltaTime + depenetrationInThisFrame;
     }
@@ -209,11 +210,18 @@ public class WheelController : MonoBehaviour
     Vector3 GetAllignedDepenetration(Vector3 newPosition)
     {
         Vector3 depenetrationVector = GetDepenetrationForPosition(newPosition);
+        if (depenetrationVector.sqrMagnitude == 0)
+            return Vector3.zero;
 
-        float angleCos = Mathf.Cos( Vector3.Angle(depenetrationVector, strutVector) * Mathf.Deg2Rad );
 
-        depenetrationVector = depenetrationVector.normalized * (depenetrationVector.magnitude / angleCos);
-        depenetrationVector = Quaternion.FromToRotation(depenetrationVector, -strutVector) * depenetrationVector;
+        float angle = Vector3.Angle(depenetrationVector, strutVector);
+        float newScale = depenetrationVector.magnitude;//depenetrationVector.magnitude / angleCos;
+
+        if (angle < 90) {
+            depenetrationVector = strutVector * newScale;
+        } else {
+            depenetrationVector = -strutVector * newScale;
+        }
 
         return depenetrationVector;
     }
@@ -301,3 +309,5 @@ public class WheelController : MonoBehaviour
         }
     }
 }    
+
+//Debug.DrawRay(carBody.position + localRestPoint - wheelBody.right*0.4f + wheelBody.forward*0.01f * counter, depenetrationVector, Color.yellow, 5, false);
