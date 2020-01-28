@@ -50,7 +50,6 @@ public class WheelController : MonoBehaviour
     private Rigidbody carBody = null;
     private Transform wheelBody = null;
     private Collider wheelCollider = null;
-    private Vector3 halfBoundingBoxSize;
 
     private bool isWheelRight;
 
@@ -64,12 +63,6 @@ public class WheelController : MonoBehaviour
     {
         //carBody = this.transform.parent.GetComponent<Rigidbody>();
         wheelBody = this.gameObject.transform;
-
-        halfBoundingBoxSize = GetComponent<MeshFilter>().mesh.bounds.size * 0.5f;
-        //wheelBody = this.gameObject.GetComponent<Rigidbody>();
-        /*if (wheelBody == null) {
-            wheelBody = this.gameObject.AddComponent<Rigidbody>();
-        }*/
         wheelCollider = this.gameObject.GetComponent<MeshCollider>();
         
 
@@ -93,7 +86,7 @@ public class WheelController : MonoBehaviour
             isWheelRight = true;
         }
         
-
+        wheelRadius = wheelCollider.bounds.size.y * 0.501f;
 
         
         inited = true;
@@ -117,6 +110,7 @@ public class WheelController : MonoBehaviour
         Vector3 depenetrationInThisFrame = GetAllignedDepenetration(wheelBody.position);
         Vector3 springAccelerationInFrame = Vector3.zero;
         Vector3 depenetrationInNextFrame = Vector3.zero;
+        Vector3 springForce = GetSpringForce();
 
         if (depenetrationInThisFrame.sqrMagnitude > 0) {
 
@@ -125,25 +119,33 @@ public class WheelController : MonoBehaviour
 
         } else {
             
-            springAccelerationInFrame = GetSpringAcceleration() * Time.deltaTime;
-            depenetrationInNextFrame = GetAllignedDepenetration(wheelBody.position + wheelVelocity + springAccelerationInFrame);
-
-
-            Vector3 correctedSpringAcceleration;
-            
-            correctedSpringAcceleration = springAccelerationInFrame + depenetrationInNextFrame;
-            wheelVelocity += correctedSpringAcceleration;
-            wheelBody.position += wheelVelocity;
-            
+            springAccelerationInFrame = springForce / wheelMass;
+            wheelVelocity += springAccelerationInFrame * Time.deltaTime;
             wheelVelocity = GetDampedVelocity(wheelVelocity);
 
+            depenetrationInNextFrame = GetAllignedDepenetration(wheelBody.position + wheelVelocity);
+            wheelVelocity += depenetrationInNextFrame;
+            wheelBody.position += wheelVelocity;
 
-            Debug.DrawRay(wheelBody.position - wheelBody.right*0.1f + wheelBody.forward*0.05f, springAccelerationInFrame, Color.red, Time.deltaTime, false);
+
+            Debug.DrawRay(wheelBody.position - wheelBody.right*0.1f + wheelBody.forward*0.05f, springAccelerationInFrame * Time.deltaTime, Color.red, Time.deltaTime, false);
             Debug.DrawRay(wheelBody.position - wheelBody.right*0.2f + wheelBody.forward*0.1f, depenetrationInNextFrame, Color.blue, Time.deltaTime, false);
-            Debug.DrawRay(wheelBody.position - wheelBody.right*0.3f + wheelBody.forward*0.15f, correctedSpringAcceleration, Color.green, Time.deltaTime, false);
-            Debug.DrawRay(wheelBody.position - wheelBody.right*0.4f + wheelBody.forward*0.2f, wheelVelocity, Color.magenta, Time.deltaTime, false);            
+            Debug.DrawRay(wheelBody.position - wheelBody.right*0.4f + wheelBody.forward*0.2f, wheelVelocity * Time.deltaTime, Color.magenta, Time.deltaTime, false);            
         }
 
+        /*Vector3 HOffset = GetHOffsetForPos(localWheelPos);
+        if (HOffset.sqrMagnitude > 0)
+            wheelBody.position -= HOffset;*/
+
+
+
+
+        /*carBody.AddForceAtPosition(-springForce , carBody.position + carBody.rotation * localRestPoint, ForceMode.Impulse);
+
+        Vector3 restPointVelocity = carBody.GetPointVelocity(carBody.position + carBody.rotation * localRestPoint) * Time.deltaTime;
+        restPointVelocity = GetDampedVelocity(restPointVelocity);
+
+        carBody.AddForceAtPosition(-restPointVelocity, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);*/
     }
 
     void UpdateValues()
@@ -153,22 +155,6 @@ public class WheelController : MonoBehaviour
         offsetFromRestPoint =   carBody.rotation * localRestPoint - localWheelPos;
     }
 
-    Vector3 GetSurfaceReaction()
-    {
-        Vector3 wheelReactionInFrame = Vector3.zero;
-        /*Vector3 surfaceReaction = GetDepenetrationVector();
-
-        Vector3 surfaceReactionAcceleration = Vector3.Project(surfaceReaction, strutVector);
-        Vector3 vOffsetInNextFrame = GetVOffsetForPos(localWheelPos + surfaceReactionAcceleration);
-
-        if (vOffsetInNextFrame.sqrMagnitude > 0) {
-            surfaceReactionAcceleration += vOffsetInNextFrame;
-        }
-
-        wheelReactionInFrame = surfaceReactionAcceleration;*/
-
-        return wheelReactionInFrame;
-    }
 
     Vector3 GetDepenetrationForPosition(Vector3 newPosition)
     {
@@ -255,12 +241,8 @@ public class WheelController : MonoBehaviour
         return dampedVelocity;
     }
 
-    Vector3 GetSpringAcceleration()
+    Vector3 GetSpringForce()
     {
-        Vector3 springAcceleration = Vector3.zero;
-        
-        localWheelPos = wheelBody.position - carBody.position;
-        strutVector = (carBody.rotation * (strutBottomPoint - strutTopPoint)).normalized;
         Vector3 localOffset = localRestPoint - localWheelPos;
         /*if (localOffset.sqrMagnitude > ((StrutToTop - StrutToBottom)*10) )
         {
@@ -268,9 +250,8 @@ public class WheelController : MonoBehaviour
         }*/
 
         Vector3 springForce = localOffset * springValue;
-        springAcceleration = springForce/wheelMass;
 
-        return springAcceleration;
+        return springForce;
     }
 
 
