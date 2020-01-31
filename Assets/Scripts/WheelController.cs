@@ -40,7 +40,6 @@ public class WheelController : MonoBehaviour
     private Vector3 strutBottomPoint = Vector3.zero;
     private Vector3 localRestPoint = Vector3.zero;
 
-    private Vector3 localWheelPos = Vector3.zero;
     private Vector3 strutVector = Vector3.zero;
     private Vector3 offsetFromRestPoint = Vector3.zero;
 
@@ -105,54 +104,43 @@ public class WheelController : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        UpdateValues();
+        strutVector = (carBody.rotation * (strutBottomPoint - strutTopPoint)).normalized;
+        
+        Vector3 desiredPosition = wheelBody.position;
+        Vector3 offsetFromRestPoint = carBody.rotation * localRestPoint - (wheelBody.position - carBody.position);
+        
+
+
+        // velocity alternation
+        Vector3 offsetFromRestPointVert = Vector3.Project(offsetFromRestPoint, strutVector);
+        Vector3 springForce = offsetFromRestPointVert * springValue;
+        Vector3 springAcceleration = (springForce / wheelMass) * Time.deltaTime;
+        //wheelVelocity += springAcceleration;
+
+        wheelVelocity = GetDampedVelocity(wheelVelocity);
+
+
+        // position fix
 
         Vector3 depenetrationInThisFrame = GetAllignedDepenetration(wheelBody.position);
-        Vector3 springAccelerationInFrame = Vector3.zero;
-        Vector3 depenetrationInNextFrame = Vector3.zero;
-        Vector3 springForce = GetSpringForce();
-
-        if (depenetrationInThisFrame.sqrMagnitude > 0) {
-
+        if ( Vector3.Angle(wheelVelocity, depenetrationInThisFrame) > 90 )
             wheelVelocity = Vector3.zero;
-            wheelBody.position += depenetrationInThisFrame;
 
-        } else {
-            
-            springAccelerationInFrame = springForce / wheelMass;
-            wheelVelocity += springAccelerationInFrame * Time.deltaTime;
-            wheelVelocity = GetDampedVelocity(wheelVelocity);
+        Vector3 desiredLocalWheelPos = desiredPosition - carBody.position;
 
-            depenetrationInNextFrame = GetAllignedDepenetration(wheelBody.position + wheelVelocity);
-            wheelVelocity += depenetrationInNextFrame;
-            wheelBody.position += wheelVelocity;
+        Vector3 HOffset = GetHOffsetForPos(desiredLocalWheelPos);
+        Vector3 VOffset = GetVOffsetForPos(desiredLocalWheelPos);
 
-
-            Debug.DrawRay(wheelBody.position - wheelBody.right*0.1f + wheelBody.forward*0.05f, springAccelerationInFrame * Time.deltaTime, Color.red, Time.deltaTime, false);
-            Debug.DrawRay(wheelBody.position - wheelBody.right*0.2f + wheelBody.forward*0.1f, depenetrationInNextFrame, Color.blue, Time.deltaTime, false);
-            Debug.DrawRay(wheelBody.position - wheelBody.right*0.4f + wheelBody.forward*0.2f, wheelVelocity * Time.deltaTime, Color.magenta, Time.deltaTime, false);            
+        if (VOffset.sqrMagnitude > 0) {
+            depenetrationInThisFrame = Vector3.zero;
+            if ( Vector3.Angle(wheelVelocity, VOffset) > 90 )
+                wheelVelocity = Vector3.zero;    
         }
 
-        /*Vector3 HOffset = GetHOffsetForPos(localWheelPos);
-        if (HOffset.sqrMagnitude > 0)
-            wheelBody.position -= HOffset;*/
+        Debug.DrawRay(wheelBody.position, VOffset , Color.yellow, Time.deltaTime, false);
 
 
-
-
-        /*carBody.AddForceAtPosition(-springForce , carBody.position + carBody.rotation * localRestPoint, ForceMode.Impulse);
-
-        Vector3 restPointVelocity = carBody.GetPointVelocity(carBody.position + carBody.rotation * localRestPoint) * Time.deltaTime;
-        restPointVelocity = GetDampedVelocity(restPointVelocity);
-
-        carBody.AddForceAtPosition(-restPointVelocity, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);*/
-    }
-
-    void UpdateValues()
-    {
-        localWheelPos = wheelBody.position - carBody.position;
-        strutVector = (carBody.rotation * (strutBottomPoint - strutTopPoint)).normalized;
-        offsetFromRestPoint =   carBody.rotation * localRestPoint - localWheelPos;
+        wheelBody.position += wheelVelocity + depenetrationInThisFrame + HOffset + VOffset;
     }
 
 
@@ -199,7 +187,7 @@ public class WheelController : MonoBehaviour
 
 
         float angle = Vector3.Angle(depenetrationVector, strutVector);
-        float newScale = depenetrationVector.magnitude;//depenetrationVector.magnitude / angleCos;
+        float newScale = depenetrationVector.magnitude;
 
         if (angle < 90) {
             depenetrationVector = strutVector * newScale;
@@ -210,26 +198,29 @@ public class WheelController : MonoBehaviour
         return depenetrationVector;
     }
 
-    Vector3 GetHOffsetForPos(Vector3 newOffset)
+    Vector3 GetHOffsetForPos(Vector3 newLocalPosition)
     {
-        Vector3 horizontalOffsetFromStrut = Vector3.ProjectOnPlane(newOffset, strutVector);
+        Vector3 offsetFromRestPoint = carBody.rotation * localRestPoint - newLocalPosition;
+
+        Vector3 horizontalOffsetFromStrut = Vector3.ProjectOnPlane(offsetFromRestPoint, strutVector);
 
         return horizontalOffsetFromStrut;
     }
 
-    Vector3 GetVOffsetForPos(Vector3 newOffset)
+    Vector3 GetVOffsetForPos(Vector3 newLocalPosition)
     {
         Vector3 verticalOffsetFromStrut = Vector3.zero;
 
-        Vector3 positionOnStrut = Quaternion.FromToRotation(strutVector, -Vector3.up) * Vector3.Project(newOffset, strutVector);
+        Vector3 positionOnStrut = Quaternion.FromToRotation(strutVector, -Vector3.up) * Vector3.Project(newLocalPosition, strutVector);
         if (positionOnStrut.y > StrutToTop)
         {
-            verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutTopPoint - newOffset, strutVector);
+            verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutTopPoint - newLocalPosition, strutVector);
         }
         if (positionOnStrut.y < StrutToBottom)
         {
-            verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutBottomPoint - newOffset, strutVector);
+            verticalOffsetFromStrut = Vector3.Project(carBody.rotation * strutBottomPoint - newLocalPosition, strutVector);
         }
+        
 
         return verticalOffsetFromStrut;
     }
@@ -239,19 +230,6 @@ public class WheelController : MonoBehaviour
         Vector3 dampedVelocity = velocity - (velocity * dampingValue);
 
         return dampedVelocity;
-    }
-
-    Vector3 GetSpringForce()
-    {
-        Vector3 localOffset = localRestPoint - localWheelPos;
-        /*if (localOffset.sqrMagnitude > ((StrutToTop - StrutToBottom)*10) )
-        {
-            return Vector3.zero;
-        }*/
-
-        Vector3 springForce = localOffset * springValue;
-
-        return springForce;
     }
 
 
