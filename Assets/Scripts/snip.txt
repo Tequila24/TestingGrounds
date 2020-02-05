@@ -1,5 +1,3 @@
-/*
-
     void ApplyStrutConstraint()
     {
         Vector3 localWheelPos = wheelBody.transform.position - carBody.transform.position;
@@ -128,7 +126,7 @@
 
     void CastRays()
     {
-        /*List<RaycastHit> rayHits = new List<RaycastHit>();
+        List<RaycastHit> rayHits = new List<RaycastHit>();
 
         foreach (Vector3 vector in raycastVectors)
         {
@@ -200,4 +198,61 @@
         Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, -springForce, Color.red, Time.deltaTime);
         Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, horizontalOffset, Color.yellow, Time.deltaTime);
     }
-*/
+
+
+
+
+counter = counter>100 ? 0 : (counter+1);
+
+        strutVector = (carBody.rotation * (strutTopPoint - strutBottomPoint)).normalized;
+        
+        Vector3 offsetFromRestPoint = carBody.rotation * localRestPoint - (wheelBody.position - carBody.position);
+        
+        Vector3 positionFix = Vector3.zero;
+
+
+        // velocity alternation
+        Vector3 offsetFromRestPointVert = Vector3.Project(offsetFromRestPoint, strutVector);
+        Vector3 springForce = offsetFromRestPointVert * springValue;
+        Vector3 springAcceleration = (springForce / wheelMass) * Time.deltaTime;
+        wheelVelocity += springAcceleration;
+        wheelVelocity = GetDampedVelocity(wheelVelocity);
+
+
+        Vector3 positionInNextFrame = wheelBody.position + wheelVelocity;
+
+        Vector3 depenetrationInNextFrame = GetAllignedDepenetration(positionInNextFrame);
+        if (depenetrationInNextFrame.sqrMagnitude > 0) {
+            positionFix += depenetrationInNextFrame;
+        }
+
+        Vector3 HOffset = GetHOffsetForPos(positionInNextFrame - carBody.position);
+        Vector3 VOffset = GetVOffsetForPos(positionInNextFrame - carBody.position);
+        positionFix -= HOffset;
+
+        wheelBody.position += wheelVelocity + positionFix;
+
+
+
+        // CAR PART
+        carBody.AddForceAtPosition(-springForce / carBody.mass, wheelBody.position, ForceMode.VelocityChange);
+
+        Vector3 carRestPointVelocity = carBody.GetPointVelocity(carBody.position + carBody.rotation * localRestPoint); 
+
+        //remove slide and torque
+        if (depenetrationInNextFrame.sqrMagnitude > 0) {
+            Vector3 carRelativeVelocity = Vector3.Project(carRestPointVelocity, strutVector) - wheelVelocity;
+            //carRelativeVelocity = GetDampedVelocity(carRelativeVelocity);
+            carBody.AddForceAtPosition(-carRelativeVelocity * Time.deltaTime, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+
+
+            Vector3 carSideVelocity = Vector3.ProjectOnPlane(carRestPointVelocity, depenetrationInNextFrame) * tractionValue;
+            Debug.DrawRay(wheelBody.position, carSideVelocity * 100, Color.magenta, Time.deltaTime, false);
+            carBody.AddForceAtPosition(-carSideVelocity * Time.deltaTime, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+            //carBody.AddTorque(carBody.angularVelocity * )
+        }
+        
+    }
+
+        //Debug.DrawRay(carBody.position + localRestPoint - wheelBody.right*0.4f + wheelBody.forward*0.01f * counter + wheelBody.forward*0.0f, depenetrationInNextFrame * 10, Color.yellow, (100*0.02f), false);
+        //Debug.DrawRay(carBody.position + localRestPoint - wheelBody.right*0.4f + wheelBody.forward*0.01f * counter + wheelBody.forward*0.05f, wheelVelocity * 10, Color.red, (100*0.02f), false);
