@@ -115,9 +115,6 @@ public class WheelController : MonoBehaviour
         
         offsetFromRestPoint += (strutRotation * (-springAcceleration + depenetrationInNextFrame)).y;
 
-            Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint + wheelBody.right, springAcceleration * 10, Color.red, Time.deltaTime, false);
-            Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint + wheelBody.right * 0.95f, depenetrationInNextFrame * 10, Color.blue, Time.deltaTime, false);
-
         if ( (offsetFromRestPoint > StrutToTop) || (offsetFromRestPoint < StrutToBottom) )
             isSuspensionFloored = true;
 
@@ -137,17 +134,16 @@ public class WheelController : MonoBehaviour
 
 
             //apply spring force
-            Vector3 carSpringAccceleration = Strut * ((offsetFromRestPoint * springValue) / carBody.mass);
+            Vector3 carSpringAccceleration = carBody.transform.up * ((offsetFromRestPoint * springValue) / carBody.mass);
             carBody.AddForceAtPosition(carSpringAccceleration, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
-            //Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint + wheelBody.right, carSpringAccceleration * 10, Color.red, Time.deltaTime, false);
 
 
             // damp speed
             Vector3 carVerticalSpeed = Vector3.zero;
             if (isSuspensionFloored) {
-                carVerticalSpeed = Vector3.Project(carRestPointVelocity - Physics.gravity * Time.deltaTime, Strut) * Time.deltaTime;
+                carVerticalSpeed = Vector3.Project(carRestPointVelocity, carBody.transform.up);
             } else {
-                carVerticalSpeed = GetDampedVelocity( Vector3.Project(carRestPointVelocity, Strut) );
+                carVerticalSpeed = GetDampedVelocity( Vector3.Project(carRestPointVelocity, carBody.transform.up) );
             }
             carBody.AddForceAtPosition(-carVerticalSpeed, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
 
