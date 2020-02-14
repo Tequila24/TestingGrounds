@@ -321,7 +321,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 869967881}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &770496982
 MeshCollider:
@@ -398,11 +398,13 @@ MonoBehaviour:
   isSteerable: 0
   isGrounded: 0
   steerAngle: 0
+  restPoint: {x: 1, y: -1, z: -2.0999985}
+  strut: {x: 0, y: 0, z: 0}
   wheelMass: 1
   dampingValue: 0.5
   springValue: 1
-  StrutToTop: 0
-  StrutToBottom: 0
+  StrutToTop: 1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
 --- !u!1 &783286312
@@ -495,8 +497,8 @@ Transform:
   m_Children:
   - {fileID: 2055792762}
   - {fileID: 1344261341}
-  - {fileID: 770496981}
   - {fileID: 1392429177}
+  - {fileID: 770496981}
   m_Father: {fileID: 1680290066}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -730,11 +732,13 @@ MonoBehaviour:
   isSteerable: 1
   isGrounded: 0
   steerAngle: 0
+  restPoint: {x: -1, y: -1, z: 2.2000008}
+  strut: {x: 0, y: 0, z: 0}
   wheelMass: 1
   dampingValue: 0.5
   springValue: 1
-  StrutToTop: 0
-  StrutToBottom: 0
+  StrutToTop: 1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
 --- !u!1 &1392429176
@@ -769,7 +773,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 869967881}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!64 &1392429178
 MeshCollider:
@@ -846,11 +850,13 @@ MonoBehaviour:
   isSteerable: 0
   isGrounded: 0
   steerAngle: 0
+  restPoint: {x: -1, y: -1, z: -2.0999985}
+  strut: {x: 0, y: 0, z: 0}
   wheelMass: 1
   dampingValue: 0.5
   springValue: 1
-  StrutToTop: 0
-  StrutToBottom: 0
+  StrutToTop: 1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
 --- !u!1 &1680290064
@@ -1014,11 +1020,13 @@ MonoBehaviour:
   isSteerable: 1
   isGrounded: 0
   steerAngle: 0
+  restPoint: {x: 1, y: -1, z: 2.2000008}
+  strut: {x: 0, y: 0, z: 0}
   wheelMass: 1
   dampingValue: 0.5
   springValue: 1
-  StrutToTop: 0
-  StrutToBottom: 0
+  StrutToTop: 1
+  StrutToBottom: -1
   CasterAngle: 0
   CamberAngle: 0
 --- !u!1001 &3725476724263699271
