@@ -4,16 +4,17 @@ using UnityEngine;
 using UnityEditor;
 
 
-public class WheelController : MonoBehaviour
+public class WheelControllerOld : MonoBehaviour
 {
 
     // killme
     private bool inited = false;
-    private int counter = 0;
 
     public bool isDrive = false;
     public bool isSteerable = false;
     public bool isGrounded = false;
+    public float steerAngle = 0;
+
 
     private float wheelRadius = 1;
     [SerializeField]
@@ -29,10 +30,8 @@ public class WheelController : MonoBehaviour
 
 
     [SerializeField]
-    [Range (0,10)]
     private float StrutToTop = 0;    
     [SerializeField]
-    [Range (-10,0)]
     private float StrutToBottom = 0;
     [SerializeField]
     private float CasterAngle = 0;
@@ -55,6 +54,7 @@ public class WheelController : MonoBehaviour
     private Vector3 Strut = Vector3.zero;
     private Vector3 carRestPointVelocity = Vector3.zero;
     private Vector3 depenetrationInNextFrame = Vector3.zero;
+    private Vector3 wheelVelocityOnStrut = Vector3.zero;
     private float offsetFromRestPoint = 0;
 
     bool isSuspensionFloored = false;
@@ -101,12 +101,6 @@ public class WheelController : MonoBehaviour
     }
 
 
-    void UpdateGlobalValues()
-    {
-        Strut = (carBody.rotation * (strutTopPoint - strutBottomPoint)).normalized;
-        carRestPointVelocity = carBody.GetPointVelocity(carBody.position + carBody.rotation * localRestPoint) * Time.deltaTime;
-        isGrounded = depenetrationInNextFrame.sqrMagnitude > 0 ? true : false;
-    }
 
 
 
@@ -123,12 +117,26 @@ public class WheelController : MonoBehaviour
         
     }
 
+
+    void UpdateGlobalValues()
+    {
+        Strut = (carBody.rotation * (strutTopPoint - strutBottomPoint)).normalized;
+        carRestPointVelocity = ( carBody.GetPointVelocity(carBody.position + carBody.rotation * localRestPoint) /* + gravity? */) * Time.deltaTime;
+    }
+
+
     void UpdateWheelPosition()
     {
-        Vector3 springAcceleration = Strut * ((offsetFromRestPoint * springValue) / wheelMass) * Time.deltaTime;
-        depenetrationInNextFrame = (GetAllignedDepenetration(wheelBody.position - springAcceleration));
-        
-        offsetFromRestPoint += ( Quaternion.FromToRotation(Strut, Vector3.up) * (-springAcceleration + depenetrationInNextFrame) ).y;
+
+        Vector3 springAcceleration = -Strut * ((offsetFromRestPoint * springValue) / wheelMass) * Time.deltaTime;
+        wheelVelocityOnStrut += springAcceleration;
+
+        depenetrationInNextFrame = GetAllignedDepenetration(wheelBody.position + wheelVelocityOnStrut + carRestPointVelocity);
+        wheelVelocityOnStrut += depenetrationInNextFrame;
+
+        offsetFromRestPoint += ( Quaternion.FromToRotation(Strut, Vector3.up) * (wheelVelocityOnStrut) ).y;
+
+
 
         if ( (offsetFromRestPoint > StrutToTop) || (offsetFromRestPoint < StrutToBottom) )
             isSuspensionFloored = true;
@@ -137,49 +145,53 @@ public class WheelController : MonoBehaviour
 
 
         offsetFromRestPoint = Mathf.Clamp(offsetFromRestPoint, StrutToBottom, StrutToTop);
-
         
 
         wheelBody.position =    carBody.position + carBody.rotation * localRestPoint +
                                 carRestPointVelocity + 
                                 Strut * offsetFromRestPoint;
+
+
+        wheelVelocityOnStrut -= wheelVelocityOnStrut * dampingValue;
+
+        isGrounded = depenetrationInNextFrame.sqrMagnitude > 0 ? true : false;
     }
+
 
     void UpdateWheelRotation()
     {
-        float angularVelocity = Vector3.Project(carRestPointVelocity * Time.deltaTime, carBody.transform.forward).sqrMagnitude * 999999999;
+        
         //Quaternion deltaWheelRotation = Quaternion.AngleAxis(angularVelocity, carBody.transform.right);
+        Quaternion steerRotation = Quaternion.AngleAxis(steerAngle, carBody.transform.up);
+        Quaternion axisRotation = (isWheelRight ? Quaternion.AngleAxis(180, carBody.transform.up) * carBody.rotation : carBody.rotation);
 
-        wheelBody.rotation = (isWheelRight ? Quaternion.AngleAxis(180, carBody.transform.up) * carBody.rotation : carBody.rotation);
+        wheelBody.rotation = axisRotation * steerRotation;
         //wheelBody.rotation *= deltaWheelRotation;
     }
 
+
     void ApplyCarPhysics()
     {
-        if (depenetrationInNextFrame.sqrMagnitude > 0) {
-            
-            //apply spring force
-            Vector3 carSpringAccceleration = carBody.transform.up * ((offsetFromRestPoint * springValue) / carBody.mass);
-            carBody.AddForceAtPosition(carSpringAccceleration, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+
+        // apply spring
+        Vector3 springForce = carBody.transform.up * ((offsetFromRestPoint * springValue));
+        carBody.AddForceAtPosition(springForce, carBody.position + carBody.rotation * localRestPoint, ForceMode.Impulse);
 
 
-            // damp speed
-            Vector3 carVerticalSpeed = Vector3.zero;
-            if (isSuspensionFloored) {
-                carVerticalSpeed = Vector3.Project(carRestPointVelocity, carBody.transform.up);
-            } else {
-                carVerticalSpeed = Vector3.Project(carRestPointVelocity, carBody.transform.up) * dampingValue;
-            }
-            carBody.AddForceAtPosition(-carVerticalSpeed, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+        // damp speed
 
-
-            // apply traction
-            //Vector3 carSlipVelocity = Vector3.ProjectOnPlane(carRestPointVelocity, carBody.transform.up);
-            //carBody.AddForceAtPosition(-carSlipVelocity, carBody.position + carBody.rotation * localRestPoint, ForceMode.VelocityChange);
+        Vector3 carRelativeVerticalSpeed = (wheelVelocityOnStrut) * dampingValue;
+        if (isSuspensionFloored) {
+            carRelativeVerticalSpeed -= depenetrationInNextFrame;
         }
+        carRelativeVerticalSpeed = Vector3.Project(carRelativeVerticalSpeed, Strut);
+        
+
+        Debug.DrawRay(carBody.position + carBody.rotation * localRestPoint, carRelativeVerticalSpeed, Color.yellow, Time.deltaTime, false);
     }
 
-    Vector3 GetDepenetrationForPosition(Vector3 newPosition)
+
+    Vector3 GetDepenetration(Vector3 newPosition)
     {
         Vector3 surfacePenetration = Vector3.zero;
         Collider[] surfaces = new Collider[16];
@@ -216,7 +228,7 @@ public class WheelController : MonoBehaviour
 
     Vector3 GetAllignedDepenetration(Vector3 newPosition)
     {
-        Vector3 depenetrationVector = GetDepenetrationForPosition(newPosition);
+        Vector3 depenetrationVector = GetDepenetration(newPosition);
 
         if (depenetrationVector.sqrMagnitude == 0)
             return Vector3.zero;
