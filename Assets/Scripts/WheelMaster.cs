@@ -55,19 +55,27 @@ public class WheelMaster : MonoBehaviour
             return;
         foreach (WheelControl wheel in wheels)
         {
-            wheel.restPoint = wheel.transform.position - carBody.transform.position;
+            wheel.restPoint = Quaternion.Inverse(carBody.rotation) * (wheel.transform.position - carBody.transform.position);
             
-            Vector3 strutTopPoint = Quaternion.Inverse(carBody.rotation) *
-                                    Quaternion.AngleAxis(wheel.CamberAngle, this.transform.forward) * 
-                                    carBody.rotation * (wheel.restPoint + (this.transform.up * wheel.StrutToTop));
+            wheel.meshCollider = wheel.gameObject.GetComponent<MeshCollider>();
 
+            wheel.checkBoxDistance = wheel.meshCollider.bounds.extents.magnitude;
             
-            Vector3 strutBottomPoint =  Quaternion.Inverse(carBody.rotation) *
-                                        Quaternion.AngleAxis(-wheel.CamberAngle, this.transform.forward) * 
-                                        carBody.rotation * (wheel.restPoint + (this.transform.up * wheel.StrutToBottom));
+            Vector3 strutTopPoint = Quaternion.Inverse(carBody.rotation) * 
+                                    Quaternion.AngleAxis(wheel.CamberAngle, wheel.transform.forward) * 
+                                    Quaternion.AngleAxis(-wheel.CasterAngle, this.transform.right) * 
+                                    (wheel.restPoint + (this.transform.up * wheel.StrutToTop));
 
 
-            wheel.strut = (carBody.rotation * (strutTopPoint - strutBottomPoint)).normalized;
+            Vector3 strutBottomPoint =  Quaternion.Inverse(carBody.rotation) * 
+                                        Quaternion.AngleAxis(wheel.CamberAngle, wheel.transform.forward) * 
+                                        Quaternion.AngleAxis(-wheel.CasterAngle, this.transform.right) * 
+                                        (wheel.restPoint + (this.transform.up * wheel.StrutToBottom));
+
+
+            wheel.defaultStrut = (carBody.rotation * (strutTopPoint - strutBottomPoint)).normalized;
+
+            wheel.isRight = (Vector3.Angle(carBody.transform.right, wheel.transform.right) > 90) ? true : false;
         }
     }
 
@@ -75,6 +83,8 @@ public class WheelMaster : MonoBehaviour
 
     void FixedUpdate()
     {
+        UpdateWheelsNormal();
+
         foreach (WheelControl wheel in wheels)
         {
             UpdateWheelPosition(wheel);
@@ -87,49 +97,72 @@ public class WheelMaster : MonoBehaviour
 
     void UpdateWheelPosition(WheelControl wheel)
     {
-        Vector3 carRestPointVelocity = ( carBody.GetPointVelocity(carBody.position + carBody.rotation * localRestPoint) ) * Time.deltaTime;
+        wheel.strut = (carBody.transform.rotation * (wheel.defaultStrut)).normalized;
 
+        Vector3 carRestPointVelocity = ( carBody.GetPointVelocity(carBody.position + carBody.rotation * wheel.restPoint) ) * Time.deltaTime;
+
+        // wheel position
         Vector3 springAcceleration = -wheel.strut * ((wheel.offsetFromRestPoint * wheel.springValue) / wheel.wheelMass) * Time.deltaTime;
-        wheelVelocityOnStrut += springAcceleration;
+        wheel.velocityOnStrut += springAcceleration;
 
-        depenetrationInNextFrame = GetAllignedDepenetration(wheel.transform.position + wheel.wheelVelocityOnStrut + carRestPointVelocity);
-        wheelVelocityOnStrut += depenetrationInNextFrame;
+        CollisionCheckInfo newCheck = new CollisionCheckInfo(wheel.meshCollider, wheel.transform.position, wheel.transform.rotation, wheel.checkBoxDistance);
+        Vector3 depenetrationInNextFrame = GetAllignedDepenetration(newCheck, wheel.strut);
+        wheel.velocityOnStrut += depenetrationInNextFrame;
+        wheel.surfaceReaction = depenetrationInNextFrame;
 
-        offsetFromRestPoint += ( Quaternion.FromToRotation(Strut, Vector3.up) * (wheelVelocityOnStrut) ).y;
+        wheel.offsetFromRestPoint += ( Quaternion.FromToRotation(wheel.strut, Vector3.up) * (wheel.velocityOnStrut) ).y;
 
 
-
-        if ( (offsetFromRestPoint > StrutToTop) || (offsetFromRestPoint < StrutToBottom) )
-            isSuspensionFloored = true;
+        if ( (wheel.offsetFromRestPoint > wheel.StrutToTop) || (wheel.offsetFromRestPoint < wheel.StrutToBottom) )
+            wheel.isFloored = true;
         else 
-            isSuspensionFloored = false;
+            wheel.isFloored = false;
 
 
-        offsetFromRestPoint = Mathf.Clamp(offsetFromRestPoint, StrutToBottom, StrutToTop);
+        wheel.offsetFromRestPoint = Mathf.Clamp(wheel.offsetFromRestPoint, wheel.StrutToBottom, wheel.StrutToTop);
         
 
-        wheelBody.position =    carBody.position + carBody.rotation * localRestPoint +
-                                carRestPointVelocity + 
-                                Strut * offsetFromRestPoint;
+        wheel.transform.position =  carBody.position + carBody.rotation * wheel.restPoint +
+                                    carRestPointVelocity + 
+                                    wheel.strut * wheel.offsetFromRestPoint;
 
 
-        wheelVelocityOnStrut -= wheelVelocityOnStrut * dampingValue;
+        wheel.velocityOnStrut -= wheel.velocityOnStrut * wheel.dampingValue;
 
         wheel.isGrounded = depenetrationInNextFrame.sqrMagnitude > 0 ? true : false;
+
     }
 
     void UpdateWheelRotation(WheelControl wheel)
     {
-
+        Quaternion axisRotation = (wheel.isRight ? Quaternion.AngleAxis(180, carBody.transform.up) * carBody.rotation : carBody.rotation);
+        wheel.transform.rotation = axisRotation;
     }
 
     void ApplyCarPhysics(WheelControl wheel)
     {
-        UpdateWheelsNormal();
+        // apply spring
+        Vector3 springForce = wheel.strut * ((wheel.offsetFromRestPoint * wheel.springValue));
+        carBody.AddForceAtPosition(springForce, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.Impulse);
+
+
+        // damp speed
+
+        Vector3 carRelativeVerticalSpeed = (wheel.velocityOnStrut) * wheel.dampingValue;
+        if (wheel.isFloored) {
+            carRelativeVerticalSpeed -= wheel.surfaceReaction;
+        }
+        carRelativeVerticalSpeed = Vector3.Project(carRelativeVerticalSpeed, wheel.strut);
+        carBody.AddForceAtPosition(carRelativeVerticalSpeed, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
+        
     }
 
     void UpdateWheelsNormal()
     {
+        foreach (WheelControl wheel in wheels)
+        {
+            
+        }
         /*Vector3 wheelLocalPosition;
         Vector3 nextWheelLocalPosition;
         Vector3 cross;
@@ -161,7 +194,6 @@ public class WheelMaster : MonoBehaviour
         Collider[] surfaces = new Collider[16];
 
         int count = Physics.OverlapSphereNonAlloc(newInfo.colliderPosition, newInfo.checkBoxDistance, surfaces);
-
 
         if (count<2)
             return surfacePenetration;
@@ -220,12 +252,11 @@ public class WheelMaster : MonoBehaviour
             Handles.DrawLine(   carBody.position + carBody.rotation * wheel.restPoint + wheel.strut * wheel.StrutToTop,
                                 carBody.position + carBody.rotation * wheel.restPoint + wheel.strut * wheel.StrutToBottom );
         
-            /*Handles.DrawLine(   carBody.position + carBody.rotation * (wheel.restPoint + wheel.transform.right*0.2f),
+            Handles.DrawLine(   carBody.position + carBody.rotation * (wheel.restPoint + wheel.transform.right*0.2f),
                                 carBody.position + carBody.rotation * (wheel.restPoint - wheel.transform.right*0.2f) );
 
             Handles.DrawLine(   wheel.transform.position + carBody.rotation * (wheel.transform.right*0.2f),
-                                wheel.transform.position + carBody.rotation * (-wheel.transform.right*0.2f) );*/
+                                wheel.transform.position + carBody.rotation * (-wheel.transform.right*0.2f) );
         }
-
     }
 }

@@ -9,12 +9,15 @@ public class WheelControl : MonoBehaviour
     public bool isDrive = false;
     public bool isSteerable = false;
     public bool isGrounded = false;
-    public float steerAngle = 0;
+    public bool isFloored = false;
 
     public Vector3 restPoint = Vector3.zero;
     public Vector3 strut = Vector3.zero;
+    public Vector3 defaultStrut = Vector3.zero;
     public float offsetFromRestPoint = 0;
-    public Vector3 wheelVelocityOnStrut = Vector3.zero;
+    public Vector3 velocityOnStrut = Vector3.zero;
+    public MeshCollider meshCollider = null;
+    public Vector3 surfaceReaction = Vector3.zero;
 
 
     [SerializeField]
@@ -34,6 +37,7 @@ public class WheelControl : MonoBehaviour
     public float CamberAngle = 0;
 
 
-    private bool isWheelRight = false;
+    public bool isRight = false;
+    public float checkBoxDistance = 0;
 
 }
