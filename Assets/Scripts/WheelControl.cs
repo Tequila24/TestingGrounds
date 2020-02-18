@@ -17,8 +17,9 @@ public class WheelControl : MonoBehaviour
     public float offsetFromRestPoint = 0;
     public Vector3 velocityOnStrut = Vector3.zero;
     public MeshCollider meshCollider = null;
-    public Vector3 surfaceReaction = Vector3.zero;
-
+    public Vector3 depenetrationInNextFrame = Vector3.zero;
+    public Vector3 surfaceNormal = Vector3.zero;
+    
 
     [SerializeField]
     public float wheelMass = 1;

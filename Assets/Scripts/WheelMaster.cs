@@ -13,21 +13,7 @@ public class WheelMaster : MonoBehaviour
     List<WheelControl> wheels = new List<WheelControl>();
     Vector3 sharedNormal = Vector3.up;
 
-    
-    struct CollisionCheckInfo {
-        public Collider collider;
-        public Vector3 colliderPosition;
-        public Quaternion colliderRotation;
-        public float checkBoxDistance;
-        
-        public CollisionCheckInfo(Collider newCollider, Vector3 newColliderPosition, Quaternion newColliderRotation, float newCheckBoxDistance)
-        {
-            this.collider = newCollider;
-            this.colliderPosition = newColliderPosition;
-            this.colliderRotation = newColliderRotation;
-            this.checkBoxDistance = newCheckBoxDistance;
-        }
-    }
+    DepenCalc depenCalc = new DepenCalc();
 
 
     void Awake()
@@ -36,6 +22,12 @@ public class WheelMaster : MonoBehaviour
 
         GetWheels();
         InitWheels();
+
+        depenCalc.ignoreList.Add(carBody.gameObject);
+        foreach (WheelControl wheel in wheels)
+        {
+            depenCalc.ignoreList.Add(wheel.gameObject);
+        }
     }
 
     
@@ -79,8 +71,6 @@ public class WheelMaster : MonoBehaviour
         }
     }
 
-
-
     void FixedUpdate()
     {
         UpdateWheelsNormal();
@@ -92,6 +82,26 @@ public class WheelMaster : MonoBehaviour
             UpdateWheelRotation(wheel);
 
             ApplyCarPhysics(wheel);
+        }
+
+
+        float throttle = Input.GetAxis("Vertical") * 0.1f;
+        float steer = Input.GetAxis("Horizontal") * 3f;
+
+        foreach (WheelControl wheel in wheels)
+        {
+            if (!wheel.isGrounded)
+                continue;
+
+            if (wheel.isDrive)
+            {
+                carBody.AddForceAtPosition(carBody.transform.forward * throttle, wheel.transform.position, ForceMode.VelocityChange);
+            }
+
+            if (wheel.isSteerable)
+            {
+                carBody.AddForceAtPosition(carBody.transform.right * (steer * Mathf.Clamp(carBody.velocity.magnitude, 0, 1) * Time.deltaTime), wheel.transform.position, ForceMode.VelocityChange);
+            }
         }
     }
 
@@ -105,10 +115,18 @@ public class WheelMaster : MonoBehaviour
         Vector3 springAcceleration = -wheel.strut * ((wheel.offsetFromRestPoint * wheel.springValue) / wheel.wheelMass) * Time.deltaTime;
         wheel.velocityOnStrut += springAcceleration;
 
-        CollisionCheckInfo newCheck = new CollisionCheckInfo(wheel.meshCollider, wheel.transform.position, wheel.transform.rotation, wheel.checkBoxDistance);
-        Vector3 depenetrationInNextFrame = GetAllignedDepenetration(newCheck, wheel.strut);
-        wheel.velocityOnStrut += depenetrationInNextFrame;
-        wheel.surfaceReaction = depenetrationInNextFrame;
+        DepenCalc.CollisionCheckInfo newCheck = new DepenCalc.CollisionCheckInfo(wheel.meshCollider, wheel.transform.position, wheel.transform.rotation, wheel.checkBoxDistance);
+        //wheel.depenetrationInNextFrame = depenCalc.GetAllignedDepenetration(newCheck, wheel.strut);
+        wheel.depenetrationInNextFrame = depenCalc.GetDepenetration(newCheck);
+        wheel.velocityOnStrut += wheel.depenetrationInNextFrame;
+        
+        
+        RaycastHit hit;
+        if (Physics.Raycast(wheel.transform.position, -wheel.depenetrationInNextFrame, out hit, wheel.checkBoxDistance))
+        {
+            wheel.surfaceNormal = Vector3.ProjectOnPlane(hit.normal, wheel.transform.right).normalized;
+            Debug.DrawRay(hit.point, wheel.surfaceNormal, Color.yellow, Time.deltaTime, false);
+        }
 
         wheel.offsetFromRestPoint += ( Quaternion.FromToRotation(wheel.strut, Vector3.up) * (wheel.velocityOnStrut) ).y;
 
@@ -129,7 +147,7 @@ public class WheelMaster : MonoBehaviour
 
         wheel.velocityOnStrut -= wheel.velocityOnStrut * wheel.dampingValue;
 
-        wheel.isGrounded = depenetrationInNextFrame.sqrMagnitude > 0 ? true : false;
+        wheel.isGrounded = wheel.depenetrationInNextFrame.sqrMagnitude > 0 ? true : false;
 
     }
 
@@ -142,27 +160,54 @@ public class WheelMaster : MonoBehaviour
     void ApplyCarPhysics(WheelControl wheel)
     {
         // apply spring
-        Vector3 springForce = wheel.strut * ((wheel.offsetFromRestPoint * wheel.springValue));
+        Vector3 springForce = Vector3.Project(wheel.strut * ((wheel.offsetFromRestPoint * wheel.springValue)), wheel.surfaceNormal);
         carBody.AddForceAtPosition(springForce, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.Impulse);
 
-
-        // damp speed
-
-        Vector3 carRelativeVerticalSpeed = (wheel.velocityOnStrut) * wheel.dampingValue;
-        if (wheel.isFloored) {
-            carRelativeVerticalSpeed -= wheel.surfaceReaction;
-        }
-        carRelativeVerticalSpeed = Vector3.Project(carRelativeVerticalSpeed, wheel.strut);
-        carBody.AddForceAtPosition(carRelativeVerticalSpeed, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
         
+
+        if (wheel.isGrounded) {
+
+            Vector3 carRestPointVelocity = ( carBody.GetPointVelocity(carBody.position + carBody.rotation * wheel.restPoint)) * Time.deltaTime;
+
+            // damp speed
+            Vector3 carRelativeVerticalSpeed = Vector3.Project(carRestPointVelocity, wheel.strut) * wheel.dampingValue;
+            if (wheel.isFloored) {
+                carRelativeVerticalSpeed -= wheel.depenetrationInNextFrame;
+            }
+            carRelativeVerticalSpeed = Vector3.Project(carRelativeVerticalSpeed, wheel.surfaceNormal);
+            carBody.AddForceAtPosition(-carRelativeVerticalSpeed, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
+            
+            // stop side sliding            
+            //Vector3 slideVelocity = Vector3.Project(carRestPointVelocity + Physics.gravity * 0.25f * Time.deltaTime, wheel.transform.right);
+            //carBody.AddForceAtPosition(-slideVelocity, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
+        }
+    }
+
+    void Update()
+    {
+        foreach (WheelControl wheel in wheels)
+        {
+            // stop side sliding
+            Vector3 carRestPointVelocity = ( carBody.GetPointVelocity(carBody.position + carBody.rotation * wheel.restPoint)) * Time.deltaTime;
+            Vector3 slideVelocity = Vector3.Project(carRestPointVelocity + Physics.gravity * 0.25f * Time.deltaTime, wheel.transform.right);
+            carBody.AddForceAtPosition(-slideVelocity, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
+        }
     }
 
     void UpdateWheelsNormal()
     {
+        /*Dictionary<float, WheelControl> wheelsInOrder = new Dictionary<float, WheelControl>();
+
         foreach (WheelControl wheel in wheels)
         {
-            
+            float angle = Vector3.SignedAngle(this.transform.forward,)
         }
+
+        sharedNormal = (sharedNormal).normalized;
+
+        Debug.DrawRay(this.transform.position, sharedNormal, Color.yellow, Time.deltaTime, false);*/
+
+
         /*Vector3 wheelLocalPosition;
         Vector3 nextWheelLocalPosition;
         Vector3 cross;
@@ -186,63 +231,6 @@ public class WheelMaster : MonoBehaviour
 
         Debug.DrawRay(this.transform.position, sharedNormal, Color.red, Time.deltaTime, false);*/
     }
-
-
-    Vector3 GetDepenetration(CollisionCheckInfo newInfo)
-    {
-        Vector3 surfacePenetration = Vector3.zero;
-        Collider[] surfaces = new Collider[16];
-
-        int count = Physics.OverlapSphereNonAlloc(newInfo.colliderPosition, newInfo.checkBoxDistance, surfaces);
-
-        if (count<2)
-            return surfacePenetration;
-
-        for (int i=0; i<count; ++i)
-        {
-            Collider collider = surfaces[i];
-
-            if (collider == newInfo.collider || collider.gameObject == carBody.gameObject)
-                continue;
-
-            Vector3 otherPosition = collider.gameObject.transform.position;
-            Quaternion otherRotation = collider.gameObject.transform.rotation;
-            Vector3 direction;
-            float distance;
-
-            bool overlapped = Physics.ComputePenetration(   newInfo.collider, newInfo.colliderPosition, newInfo.colliderRotation,
-                                                            collider, otherPosition, otherRotation,
-                                                            out direction, out distance);
-
-            if (overlapped)
-            {
-                surfacePenetration += direction * distance;
-            }
-        }
-
-        return surfacePenetration;
-    }
-
-    Vector3 GetAllignedDepenetration(CollisionCheckInfo newInfo, Vector3 strut)
-    {
-        Vector3 depenetrationVector = GetDepenetration(newInfo);
-
-        if (depenetrationVector.sqrMagnitude == 0)
-            return Vector3.zero;
-
-
-        float angle = Vector3.Angle(depenetrationVector, strut);
-        float newScale = depenetrationVector.magnitude;
-
-        if (angle < 90) {
-            depenetrationVector = strut * newScale;
-        } else {
-            depenetrationVector = -strut * newScale;
-        }
-
-        return depenetrationVector;
-    }
-
 
     void OnDrawGizmos()
     {
