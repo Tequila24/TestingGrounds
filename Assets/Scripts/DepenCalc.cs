@@ -37,18 +37,19 @@ public class DepenCalc
 
         for (int i=0; i<count; ++i)
         {
-            Collider collider = surfaces[i];
+            Collider otherCollider = surfaces[i];
 
-            if ( ignoreList.Contains(collider.gameObject) )
+            if ( ignoreList.Contains(otherCollider.gameObject) )
                 continue;
 
-            Vector3 otherPosition = collider.gameObject.transform.position;
-            Quaternion otherRotation = collider.gameObject.transform.rotation;
+            Vector3 otherPosition = otherCollider.gameObject.transform.position;
+            Quaternion otherRotation = otherCollider.gameObject.transform.rotation;
             Vector3 direction;
             float distance;
+            
 
             bool overlapped = Physics.ComputePenetration(   newInfo.collider, newInfo.colliderPosition, newInfo.colliderRotation,
-                                                            collider, otherPosition, otherRotation,
+                                                            otherCollider, otherPosition, otherRotation,
                                                             out direction, out distance);
 
             if (overlapped)
@@ -60,10 +61,8 @@ public class DepenCalc
         return surfacePenetration;
     }
 
-    public Vector3 GetAllignedDepenetration(CollisionCheckInfo newInfo, Vector3 strut)
+    public Vector3 GetAllignedDepenetration(Vector3 depenetrationVector, Vector3 strut)
     {
-        Vector3 depenetrationVector = GetDepenetration(newInfo);
-
         if (depenetrationVector.sqrMagnitude == 0)
             return Vector3.zero;
 

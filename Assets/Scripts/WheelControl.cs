@@ -19,6 +19,7 @@ public class WheelControl : MonoBehaviour
     public MeshCollider meshCollider = null;
     public Vector3 depenetrationInNextFrame = Vector3.zero;
     public Vector3 surfaceNormal = Vector3.zero;
+    public Vector3 restPointVelocity = Vector3.zero;
     
 
     [SerializeField]
