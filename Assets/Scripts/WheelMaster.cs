@@ -8,10 +8,14 @@ using UnityEditor;
 
 public class WheelMaster : MonoBehaviour
 {
-    Rigidbody carBody = null;
+    [SerializeField]
+    private float enginePower = 220;
+    private float RubberTractionValue = 0.75f;
 
-    List<WheelControl> wheels = new List<WheelControl>();
-    Vector3 sharedNormal = Vector3.up;
+    private Rigidbody carBody = null;
+
+    private List<WheelControl> wheels = new List<WheelControl>();
+    private Vector3 sharedNormal = Vector3.up;
 
     DepenCalc depenCalc = new DepenCalc();
 
@@ -66,6 +70,8 @@ public class WheelMaster : MonoBehaviour
             wheel.meshCollider = wheel.gameObject.GetComponent<MeshCollider>();
 
             wheel.checkBoxDistance = wheel.meshCollider.bounds.extents.magnitude;
+
+            wheel.wheelRadius = wheel.meshCollider.bounds.extents.y;
             
             wheel.isRight = (Vector3.Angle(carBody.transform.right, wheel.transform.right) > 90) ? true : false;
 
@@ -109,7 +115,7 @@ public class WheelMaster : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(wheel.transform.position, -wheel.depenetrationInNextFrame, out hit, wheel.checkBoxDistance))
         {
-            wheel.surfaceNormal = hit.normal;
+            wheel.surfaceNormal = Vector3.ProjectOnPlane(Vector3.Lerp(wheel.surfaceNormal, hit.normal, 0.2f), Vector3.Cross(carBody.transform.forward, sharedNormal));
             Debug.DrawRay(hit.point, wheel.surfaceNormal, Color.yellow, Time.deltaTime, false);
         }
 
@@ -138,9 +144,18 @@ public class WheelMaster : MonoBehaviour
 
     void UpdateWheelRotation(WheelControl wheel)
     {
-        //Quaternion velocityRotation = 
+        float linearVelocity = Vector3.Project(wheel.restPointVelocity, carBody.transform.forward).magnitude;
+        float wheelCircleLength = 2f * 3.1415f * wheel.wheelRadius;
+        wheel.axialRotationAngle += 360 * (linearVelocity / wheelCircleLength);
+
+        if (wheel.axialRotationAngle > 360)
+            wheel.axialRotationAngle -= 360;
+
+            
+        Quaternion steerRotation = Quaternion.AngleAxis(wheel.steeringAngle, carBody.transform.up);
+        Quaternion axialRotation = Quaternion.AngleAxis(-wheel.axialRotationAngle, -carBody.transform.right);
         Quaternion carRotation = (wheel.isRight ? Quaternion.AngleAxis(180, carBody.transform.up) * carBody.rotation : carBody.rotation);
-        wheel.transform.rotation = carRotation;
+        wheel.transform.rotation = steerRotation * axialRotation * carRotation;
     }
 
     void ApplyCarPhysics(WheelControl wheel)
@@ -157,11 +172,17 @@ public class WheelMaster : MonoBehaviour
         if (wheel.isGrounded) {
 
             // apply spring
-            Vector3 springForce = Vector3.Project(wheel.strut * ((wheel.offsetFromRestPoint * wheel.springValue)), sharedNormal);
+            Vector3 springForce = sharedNormal * ((wheel.offsetFromRestPoint * wheel.springValue));
+            //springForce += Vector3.Project(springForce, wheel.transform.right);
+            Vector3 correction = Vector3.Project(springForce, wheel.transform.right);
+            springForce -= correction;
+
+            Debug.DrawRay(carBody.position + carBody.rotation * wheel.restPoint + wheel.strut * wheel.StrutToTop, correction, Color.red, Time.deltaTime, false);
+
             carBody.AddForceAtPosition(springForce, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.Impulse);
 
             // damp speed
-            Vector3 carRelativeVerticalSpeed = Vector3.Project(wheel.restPointVelocity, sharedNormal) * wheel.dampingValue;
+            Vector3 carRelativeVerticalSpeed = Vector3.Project(wheel.restPointVelocity, wheel.surfaceNormal) * wheel.dampingValue;
             if (wheel.isFloored) {
                 carRelativeVerticalSpeed -= wheel.depenetrationInNextFrame;
             }
@@ -174,17 +195,45 @@ public class WheelMaster : MonoBehaviour
 
     void ApplyFriction(WheelControl wheel)
     {
-        if (wheel.isGrounded) {
+        if (wheel.isGrounded) 
+        {
             Vector3 sideSlideVelocity = Vector3.Project(wheel.restPointVelocity, carBody.transform.right);
-            Debug.DrawRay(wheel.transform.position, sideSlideVelocity, Color.red, Time.deltaTime, false);
             carBody.AddForceAtPosition(-sideSlideVelocity, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
-            carBody.velocity -= Vector3.Project(Physics.gravity * Time.deltaTime * 0.25f, carBody.transform.right);
+
+
+            carBody.velocity -= Vector3.Project(Physics.gravity * Time.deltaTime * (1.0f/wheels.Count), carBody.transform.right);
         }
     }
 
     void ApplyDrive(WheelControl wheel)
     {
-        
+        float throttle = Input.GetAxis("Vertical");
+        float steer = Input.GetAxis("Horizontal");
+        float brake = Input.GetKey("space") ? 1 : 0;
+
+        if (wheel.isGrounded) 
+        {    
+            if (wheel.isDrive) 
+            {
+                Vector3 driveForce = carBody.transform.forward * throttle * enginePower * Time.deltaTime;
+                carBody.AddForceAtPosition( driveForce, wheel.transform.position, ForceMode.Impulse);
+
+                Vector3 gearLosses = Vector3.Project(carBody.velocity * Time.deltaTime, carBody.transform.forward) * 0.1f;
+                carBody.AddForceAtPosition( -gearLosses, wheel.transform.position, ForceMode.VelocityChange);
+            }
+
+
+            if (wheel.isSteerable) 
+            {
+                Vector3 sideForce = carBody.transform.right * wheel.steeringAngle * (Mathf.Clamp(carBody.velocity.magnitude, 0, 5));
+                carBody.AddForceAtPosition( sideForce, wheel.transform.position, ForceMode.Impulse);
+            }
+        }
+
+        if (wheel.isSteerable)
+        {
+            wheel.steeringAngle = Mathf.Lerp(wheel.steeringAngle, 45 * steer, 0.1f);
+        }
     }
 
     void UpdateWheelsNormal()
@@ -211,14 +260,19 @@ public class WheelMaster : MonoBehaviour
             normal = Vector3.Cross(localFirst, localSecond).normalized;
             sharedNormal += normal;
 
-            Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
+            //Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
         }
         localFirst = wheels[wheels.Count-1].transform.position - middlePoint;
         localSecond = wheels[0].transform.position - middlePoint;
         normal = Vector3.Cross(localFirst, localSecond).normalized;
         sharedNormal += normal;
-        Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
+        //Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
 
+        sharedNormal = sharedNormal.normalized;
+
+        foreach (WheelControl wheel in wheels) {
+            sharedNormal += wheel.surfaceNormal;
+        }
         sharedNormal = sharedNormal.normalized;
 
         Debug.DrawRay(middlePoint, sharedNormal*2, Color.blue, Time.deltaTime, false);

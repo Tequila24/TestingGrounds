@@ -20,26 +20,21 @@ public class WheelControl : MonoBehaviour
     public Vector3 depenetrationInNextFrame = Vector3.zero;
     public Vector3 surfaceNormal = Vector3.zero;
     public Vector3 restPointVelocity = Vector3.zero;
-    
+    public float axialRotationAngle = 0;
+    public float steeringAngle = 0;
 
-    [SerializeField]
     public float wheelMass = 1;
-    [SerializeField]
     [Range (0.01f ,0.99f)]
     public float dampingValue = 0.5f;
-    [SerializeField]
     public float springValue = 1;
-    [SerializeField]
-    public float StrutToTop = 0;    
-    [SerializeField]
-    public float StrutToBottom = 0;
-    [SerializeField]
+    public float StrutToTop = 1;    
+    public float StrutToBottom = -1;
     public float CasterAngle = 0;
-    [SerializeField]
     public float CamberAngle = 0;
 
 
     public bool isRight = false;
-    public float checkBoxDistance = 0;
+    public float checkBoxDistance = 1;
+    public float wheelRadius = 1;
 
 }
