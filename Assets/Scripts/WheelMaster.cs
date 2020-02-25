@@ -186,7 +186,7 @@ public class WheelMaster : MonoBehaviour
             carBody.AddForceAtPosition(springForce, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.Impulse);
 
             // damp speed
-            Vector3 carRelativeVerticalSpeed = Vector3.Project(wheel.restPointVelocity, sharedNormal) * wheel.dampingValue ;
+            Vector3 carRelativeVerticalSpeed = Vector3.Project(wheel.restPointVelocity, sharedNormal) * wheel.dampingValue * 4;
             if (wheel.isFloored) {
                 carRelativeVerticalSpeed -= wheel.depenetrationInNextFrame;
             }
@@ -200,7 +200,7 @@ public class WheelMaster : MonoBehaviour
     {
         if (wheel.isGrounded) 
         {
-            Vector3 sideSlideVelocity = Vector3.Project(wheel.restPointVelocity, wheel.lateralDirection);
+            Vector3 sideSlideVelocity = Vector3.Project(wheel.restPointVelocity, wheel.lateralDirection) * wheel.RubberTractionValue;
             carBody.AddForceAtPosition(-sideSlideVelocity, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
 
 
@@ -221,7 +221,7 @@ public class WheelMaster : MonoBehaviour
                 Vector3 driveForce = wheel.forwardDirection * throttle * enginePower * Time.deltaTime;
                 carBody.AddForceAtPosition( driveForce, wheel.transform.position, ForceMode.Impulse);
 
-                Vector3 gearLosses = Vector3.Project(wheel.restPointVelocity, carBody.transform.forward) * 0.3f;
+                Vector3 gearLosses = Vector3.Project(wheel.restPointVelocity, wheel.forwardDirection) * 0.3f;
                 carBody.AddForceAtPosition( -gearLosses, wheel.transform.position, ForceMode.VelocityChange);
             }
 
@@ -238,6 +238,12 @@ public class WheelMaster : MonoBehaviour
         if (wheel.isSteerable)
         {
             wheel.steeringAngle = Mathf.Lerp(wheel.steeringAngle, wheel.MaxSteerAngle * steer, 0.1f);
+        }
+
+        if (brake == 1 )
+        {
+            Vector3 velocity = Vector3.Project(wheel.restPointVelocity, wheel.forwardDirection) * 0.9f;
+            carBody.AddForceAtPosition( -velocity, wheel.transform.position, ForceMode.VelocityChange);
         }
     }
 

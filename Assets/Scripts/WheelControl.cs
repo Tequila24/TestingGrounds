@@ -44,7 +44,8 @@ public class WheelControl : MonoBehaviour
     public float wheelMass = 1;
     [Range (0.01f ,0.99f)]
     public float dampingValue = 0.5f;
-    public  float RubberTractionValue = 0.75f;
+    [Range (0.01f ,0.99f)]
+    public float RubberTractionValue = 0.75f;
     public float springValue = 1;
     public float StrutToTop = 1;    
     public float StrutToBottom = -1;
