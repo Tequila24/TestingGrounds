@@ -210,9 +210,9 @@ public class WheelMaster : MonoBehaviour
 
     void ApplyDrive(WheelControl wheel)
     {
-        float throttle = Input.GetAxis("Vertical");
-        float steer = Input.GetAxis("Horizontal");
-        float brake = Input.GetKey("space") ? 1 : 0;
+        float throttle=0;// = Input.GetAxis("Vertical");
+        float steer=0;// = Input.GetAxis("Horizontal");
+        float brake=0;// = Input.GetKey("space") ? 1 : 0;
 
         if (wheel.isGrounded) 
         {    
