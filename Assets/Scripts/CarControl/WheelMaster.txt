@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
+using DepenetrationCalculation;
 
 
 
@@ -200,7 +200,7 @@ public class WheelMaster : MonoBehaviour
     {
         if (wheel.isGrounded) 
         {
-            Vector3 sideSlideVelocity = Vector3.Project(wheel.restPointVelocity, wheel.lateralDirection) * wheel.RubberTractionValue;
+            Vector3 sideSlideVelocity = Vector3.Project(wheel.restPointVelocity, wheel.lateralDirection);
             carBody.AddForceAtPosition(-sideSlideVelocity, carBody.position + carBody.rotation * wheel.restPoint, ForceMode.VelocityChange);
 
 
@@ -210,9 +210,9 @@ public class WheelMaster : MonoBehaviour
 
     void ApplyDrive(WheelControl wheel)
     {
-        float throttle=0;// = Input.GetAxis("Vertical");
-        float steer=0;// = Input.GetAxis("Horizontal");
-        float brake=0;// = Input.GetKey("space") ? 1 : 0;
+        float throttle = Input.GetAxis("Vertical");
+        float steer = Input.GetAxis("Horizontal");
+        float brake = Input.GetKey("space") ? 1 : 0;
 
         if (wheel.isGrounded) 
         {    
@@ -285,6 +285,9 @@ public class WheelMaster : MonoBehaviour
             sharedNormal += wheel.surfaceNormal;
         }
         sharedNormal = sharedNormal.normalized;
+        
+        Quaternion rotationToNormal = Quaternion.FromToRotation(carBody.transform.up, sharedNormal);
+        carBody.transform.rotation *= rotationToNormal;
 
         Debug.DrawRay(middlePoint, sharedNormal*2, Color.blue, Time.deltaTime, false);
     }
