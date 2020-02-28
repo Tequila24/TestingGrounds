@@ -13,11 +13,14 @@ public class CarController : MonoBehaviour
     private List<WheelController> wheels = new List<WheelController>();
     private Vector3 sharedNormal = Vector3.zero;
 
+    private Rigidbody vehicleBody = null;
 
 
 
     void Awake()
     {
+        vehicleBody = this.gameObject.GetComponent<Rigidbody>();
+
         GetWheels();
     }
 
@@ -47,6 +50,15 @@ public class CarController : MonoBehaviour
     void FixedUpdate()
     {
         UpdateWheelsNormal();
+
+        foreach (WheelController wheel in wheels)
+        {
+            vehicleBody.AddForceAtPosition( Vector3.Project(-wheel.SpringForce, sharedNormal), wheel.RestPoint, ForceMode.Force);
+
+            Vector3 restPointVelocity = vehicleBody.GetPointVelocity(wheel.RestPoint);
+            vehicleBody.AddForceAtPosition( Vector3.Project(-restPointVelocity, sharedNormal) * wheel.dampingValue, wheel.RestPoint );
+
+        }
     }
 
 
@@ -58,7 +70,7 @@ public class CarController : MonoBehaviour
         Vector3 middlePoint = Vector3.zero;
         foreach (WheelController wheel in wheels)
         {
-            middlePoint += wheel.transform.position;
+            middlePoint += (this.transform.position + wheel.RestPoint);
         }
         middlePoint /= wheels.Count;
 
@@ -74,20 +86,17 @@ public class CarController : MonoBehaviour
             normal = Vector3.Cross(localFirst, localSecond).normalized;
             sharedNormal += normal;
 
-            Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, localFirst, Color.yellow, Time.deltaTime, false);
-            Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, localSecond, Color.yellow, Time.deltaTime, false);
-
-            Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.yellow, Time.deltaTime, false);
+            //Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
         }
         localFirst = wheels[wheels.Count-1].transform.position - middlePoint;
         localSecond = wheels[0].transform.position - middlePoint;
         normal = Vector3.Cross(localFirst, localSecond).normalized;
         sharedNormal += normal;
-        Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.yellow, Time.deltaTime, false);
+        //Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
 
         sharedNormal = sharedNormal.normalized;
 
-        //Debug.DrawRay(middlePoint, sharedNormal*2, Color.blue, Time.deltaTime, false);
+        Debug.DrawRay(middlePoint, sharedNormal*2, Color.blue, Time.deltaTime, false);
     }
 
 }

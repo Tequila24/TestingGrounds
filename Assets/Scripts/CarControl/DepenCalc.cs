@@ -10,14 +10,14 @@ public class DepenCalc
         public Collider collider;
         public Vector3 colliderPosition;
         public Quaternion colliderRotation;
-        public float checkBoxDistance;
+        public float checkDistance;
         public List<GameObject> ignoreList;
         public CollisionCheckInfo(Collider newCollider, Vector3 newColliderPosition, Quaternion newColliderRotation, float newCheckBoxDistance, List<GameObject> newIgnoreList)
         {
             this.collider = newCollider;
             this.colliderPosition = newColliderPosition;
             this.colliderRotation = newColliderRotation;
-            this.checkBoxDistance = newCheckBoxDistance;
+            this.checkDistance = newCheckBoxDistance;
             this.ignoreList = newIgnoreList;
         }
     }
@@ -25,7 +25,7 @@ public class DepenCalc
     {
         Vector3 surfacePenetration = Vector3.zero;
         Collider[] surfaces = new Collider[16];
-        int count = Physics.OverlapSphereNonAlloc(newInfo.colliderPosition, newInfo.checkBoxDistance, surfaces);
+        int count = Physics.OverlapSphereNonAlloc(newInfo.colliderPosition, newInfo.checkDistance, surfaces);
         if (count<2)
             return surfacePenetration;
         for (int i=0; i<count; ++i)
