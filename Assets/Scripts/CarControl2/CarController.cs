@@ -53,12 +53,21 @@ public class CarController : MonoBehaviour
 
         foreach (WheelController wheel in wheels)
         {
-            vehicleBody.AddForceAtPosition( Vector3.Project(-wheel.SpringForce, sharedNormal), wheel.RestPoint, ForceMode.Force);
+            if (wheel.IsGrounded) {
+                Vector3 forceCalculated = Vector3.Project(-wheel.SpringForce / vehicleBody.mass, sharedNormal);
 
-            Vector3 restPointVelocity = vehicleBody.GetPointVelocity(wheel.RestPoint);
-            vehicleBody.AddForceAtPosition( Vector3.Project(-restPointVelocity, sharedNormal) * wheel.dampingValue, wheel.RestPoint );
+                vehicleBody.AddForceAtPosition( forceCalculated, wheel.RestPoint, ForceMode.VelocityChange);
+
+                Vector3 restPointVelocity = Vector3.Project(vehicleBody.GetPointVelocity(wheel.RestPoint), sharedNormal) * wheel.dampingValue * Time.deltaTime * wheels.Count;
+                vehicleBody.AddForceAtPosition( -restPointVelocity, wheel.RestPoint, ForceMode.VelocityChange );
+            }
 
         }
+    }
+
+    void ApplyCarBodyPhysics()
+    {
+        
     }
 
 
@@ -96,7 +105,8 @@ public class CarController : MonoBehaviour
 
         sharedNormal = sharedNormal.normalized;
 
-        Debug.DrawRay(middlePoint, sharedNormal*2, Color.blue, Time.deltaTime, false);
+        //Debug.DrawRay(middlePoint, sharedNormal*2, Color.blue, Time.deltaTime, false);
     }
 
 }
+    

@@ -18,7 +18,7 @@ public class WheelController : MonoBehaviour
     [Range (0, 45f)]
     public float MaxSteeringAngle = 20;
     
-    [Range (0.01f, 0.99f)]
+    [Range (0.01f, 1.4f)]
     public float dampingValue = 0.5f;
     public float springValue = 1;
 
@@ -49,7 +49,7 @@ public class WheelController : MonoBehaviour
     private Vector3 Strut = Vector3.zero;
     private Vector3 localRestPoint = Vector3.zero;
     public Vector3 RestPoint {
-        get {return vehicleBody.position + localRestPoint; }
+        get {return vehicleBody.position + vehicleBase.rotation * localRestPoint; }
         set {}
     }
     private Quaternion rotationToStrut = Quaternion.identity;
@@ -71,6 +71,8 @@ public class WheelController : MonoBehaviour
     private Vector3 wheelVelocity = Vector3.zero;
     private Vector3 surfaceNormal = Vector3.zero;
 
+    private Vector3 forwardDirection = Vector3.zero;
+    private Vector3 sideDirection = Vector3.zero;
 
     private float steeringAngle;
     public float Steer {
@@ -85,6 +87,7 @@ public class WheelController : MonoBehaviour
 
 
 
+
     void Awake()
     {
         Init();
@@ -95,7 +98,7 @@ public class WheelController : MonoBehaviour
     {
         vehicleBase = this.transform.parent;
         vehicleBody = this.transform.parent.GetComponent<Rigidbody>();
-        localRestPoint = this.transform.localPosition;
+        localRestPoint = Quaternion.Inverse(vehicleBase.rotation) * (this.transform.position - vehicleBase.position);
 
         wheelCollider = this.gameObject.GetComponent<MeshCollider>();
 
@@ -126,21 +129,23 @@ public class WheelController : MonoBehaviour
     {
         UpdatePosition();
         UpdateRotation();
-
+ 
         UpdateSurface();
     }
 
 
     void UpdatePosition()
     {
-        Strut = rotationToStrut * Vector3.up;
+        Strut = vehicleBase.rotation * rotationToStrut * Vector3.up;
 
         // damp velocity
         extensionVelocity -= extensionVelocity * dampingValue;
         
         // Depenetration value
+        collisionCheckInfo.collider = wheelCollider;
         collisionCheckInfo.colliderPosition = this.transform.position;
         collisionCheckInfo.colliderRotation = this.transform.rotation;
+        collisionCheckInfo.checkDistance = wheelCollider.bounds.extents.y + wheelCollider.bounds.extents.x;
         collisionCheckInfo.ignoreList = ignoreList;
         depenetrationVector = DepenCalc.GetDepenetration(collisionCheckInfo);
         float wheelDepenetrationInThisFrame = (Quaternion.Inverse(rotationToStrut) * Vector3.Project(depenetrationVector, Strut)).y;
@@ -158,17 +163,24 @@ public class WheelController : MonoBehaviour
         // apply values
         extension += extensionVelocity;
 
-        if ( (extension > maxExtension) || (extension < minExtension) )
+        if ( (extension > maxExtension) || (extension < minExtension) ) {
             isFloored = true;
-        else 
+        } else {
             isFloored = false;
+        }
 
         extension = Mathf.Clamp(extension, minExtension, maxExtension);
         
-        this.transform.localPosition = localRestPoint + Strut * extension;
+        this.transform.position =   vehicleBase.position + 
+                                    vehicleBase.rotation * localRestPoint + 
+                                    Strut * extension;
 
 
-        
+        forwardDirection = (isRight ? Vector3.Cross(surfaceNormal, this.transform.right) : Vector3.Cross(surfaceNormal, -this.transform.right) ).normalized;
+        sideDirection = Vector3.Cross(forwardDirection, this.surfaceNormal).normalized;
+
+        Debug.DrawRay(this.transform.position, forwardDirection, Color.yellow, Time.deltaTime, false);
+        Debug.DrawRay(this.transform.position, sideDirection, Color.yellow, Time.deltaTime, false);
     }
 
 
@@ -194,7 +206,7 @@ public class WheelController : MonoBehaviour
         if (Physics.Raycast(this.transform.position, -depenetrationVector, out hit, collisionCheckInfo.checkDistance))
         {
             surfaceNormal = Vector3.Lerp(surfaceNormal, hit.normal, 0.1f);
-            Debug.DrawRay(hit.point, surfaceNormal * 0.5f, Color.yellow, Time.deltaTime, false);
+            //Debug.DrawRay(hit.point, surfaceNormal * 0.5f, Color.yellow, Time.deltaTime, false);
         }
     }
 
@@ -207,12 +219,12 @@ public class WheelController : MonoBehaviour
         }
 
         Handles.color = Color.white;
-        Handles.DrawLine(   vehicleBase.position + (vehicleBase.rotation * (localRestPoint + Strut * maxExtension)),
-                            vehicleBase.position + (vehicleBase.rotation * (localRestPoint + Strut * minExtension)) );
+        Handles.DrawLine(   vehicleBase.position + (vehicleBase.rotation * localRestPoint) + Strut * maxExtension,
+                            vehicleBase.position + (vehicleBase.rotation * localRestPoint) + Strut * minExtension );
 
         Handles.color = Color.white;
-        Handles.DrawLine(   vehicleBase.position + vehicleBase.rotation * localRestPoint + this.transform.right*0.2f,
-                            vehicleBase.position + vehicleBase.rotation * localRestPoint - this.transform.right*0.2f );
+        Handles.DrawLine(   vehicleBase.position + (vehicleBase.rotation * localRestPoint) + this.transform.right*0.2f,
+                            vehicleBase.position + (vehicleBase.rotation * localRestPoint) - this.transform.right*0.2f );
 
         Handles.color = Color.red;
         Handles.DrawLine(   this.transform.position + this.transform.right*0.2f,

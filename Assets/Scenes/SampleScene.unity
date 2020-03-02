@@ -455,8 +455,8 @@ MonoBehaviour:
   isDrive: 0
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.99
-  springValue: 300
+  dampingValue: 0.97
+  springValue: 200
   maxExtension: 0.3
   minExtension: -0.1
   CasterAngle: 10
@@ -778,11 +778,11 @@ Rigidbody:
   serializedVersion: 2
   m_Mass: 3000
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 122
+  m_Constraints: 10
   m_CollisionDetection: 0
 --- !u!64 &421736350
 MeshCollider:
@@ -815,7 +815,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0650a3ff2a245604bb3ba1558fa596dd, type: 2}
+  - {fileID: 2100000, guid: ef1184ac39605384b879d1ff8205272f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -850,8 +850,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 421736348}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 36.547516, y: 3.45, z: -32.560574}
+  m_LocalRotation: {x: -0, y: -0.67922366, z: -0, w: 0.73393136}
+  m_LocalPosition: {x: 36.59, y: 3.45, z: -33.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1091489509}
@@ -860,7 +860,7 @@ Transform:
   - {fileID: 1285289111}
   m_Father: {fileID: 0}
   m_RootOrder: 7
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -85.566, z: 0}
 --- !u!114 &421736354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1499,8 +1499,8 @@ MonoBehaviour:
   isDrive: 0
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.99
-  springValue: 300
+  dampingValue: 0.97
+  springValue: 200
   maxExtension: 0.3
   minExtension: -0.1
   CasterAngle: 10
@@ -1852,8 +1852,8 @@ MonoBehaviour:
   isDrive: 0
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.99
-  springValue: 300
+  dampingValue: 0.97
+  springValue: 200
   maxExtension: 0.3
   minExtension: -0.1
   CasterAngle: 10
@@ -1967,8 +1967,8 @@ MonoBehaviour:
   isDrive: 0
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.99
-  springValue: 300
+  dampingValue: 0.97
+  springValue: 200
   maxExtension: 0.3
   minExtension: -0.1
   CasterAngle: 10
