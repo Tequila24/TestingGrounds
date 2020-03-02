@@ -54,20 +54,33 @@ public class CarController : MonoBehaviour
         foreach (WheelController wheel in wheels)
         {
             if (wheel.IsGrounded) {
-                Vector3 forceCalculated = Vector3.Project(-wheel.SpringForce / vehicleBody.mass, sharedNormal);
 
-                vehicleBody.AddForceAtPosition( forceCalculated, wheel.RestPoint, ForceMode.VelocityChange);
+                Vector3 restPointVelocity = vehicleBody.GetPointVelocity(wheel.RestPoint) * Time.deltaTime;
 
-                Vector3 restPointVelocity = Vector3.Project(vehicleBody.GetPointVelocity(wheel.RestPoint), sharedNormal) * wheel.dampingValue * Time.deltaTime * wheels.Count;
-                vehicleBody.AddForceAtPosition( -restPointVelocity, wheel.RestPoint, ForceMode.VelocityChange );
+                // Apply suspension forces
+                Vector3 springForce = Vector3.Project(-wheel.SpringForce, sharedNormal)/* / vehicleBody.mass*/;
+                vehicleBody.AddForceAtPosition( springForce, wheel.RestPoint, ForceMode.Impulse);
+
+                // Apply velocity damping
+                Vector3 verticalRestPointVelocity = Vector3.Project(restPointVelocity, sharedNormal) * wheel.dampingValue * wheels.Count;
+                vehicleBody.AddForceAtPosition( -verticalRestPointVelocity, wheel.RestPoint, ForceMode.VelocityChange );
+
+                // Apply side friction
+                Vector3 sideSlideVelocity = Vector3.Project(restPointVelocity, wheel.SideDirection) * wheels.Count;
+                vehicleBody.AddForceAtPosition(-sideSlideVelocity, wheel.RestPoint, ForceMode.VelocityChange);
+
+                // Apply gear friction and losses
+                if (wheel.isDrive) {
+                    //Vector3 gearLosses = Vector3.Project(restPointVelocity, wheel.ForwardDirection) * 0.5f * wheels.Count;
+                    Vector3 gearLosses = Vector3.Project(vehicleBody.velocity * Time.deltaTime, wheel.ForwardDirection) * 0.5f * wheels.Count;
+                    vehicleBody.AddForceAtPosition( -gearLosses, wheel.RestPoint, ForceMode.VelocityChange);
+                }
+
+                // Remove fat
+                print(vehicleBody.velocity.ToString("F4"));
             }
 
         }
-    }
-
-    void ApplyCarBodyPhysics()
-    {
-        
     }
 
 
@@ -79,7 +92,7 @@ public class CarController : MonoBehaviour
         Vector3 middlePoint = Vector3.zero;
         foreach (WheelController wheel in wheels)
         {
-            middlePoint += (this.transform.position + wheel.RestPoint);
+            middlePoint += (wheel.RestPoint);
         }
         middlePoint /= wheels.Count;
 
@@ -90,23 +103,23 @@ public class CarController : MonoBehaviour
         Vector3 normal;
         for(int i = 0; i < (wheels.Count-1); i++)
         {
-            localFirst = wheels[i].transform.position - middlePoint;
-            localSecond = wheels[i+1].transform.position - middlePoint;
+            localFirst = wheels[i].SurfacePoint - middlePoint;
+            localSecond = wheels[i+1].SurfacePoint - middlePoint;
             normal = Vector3.Cross(localFirst, localSecond).normalized;
             sharedNormal += normal;
 
-            //Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
+            Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.yellow, Time.deltaTime, false);
         }
-        localFirst = wheels[wheels.Count-1].transform.position - middlePoint;
-        localSecond = wheels[0].transform.position - middlePoint;
+        localFirst = wheels[wheels.Count-1].SurfacePoint - middlePoint;
+        localSecond = wheels[0].SurfacePoint - middlePoint;
         normal = Vector3.Cross(localFirst, localSecond).normalized;
         sharedNormal += normal;
-        //Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.blue, Time.deltaTime, false);
+        Debug.DrawRay(middlePoint + (localFirst + localSecond)/2, normal, Color.yellow, Time.deltaTime, false);
 
-        sharedNormal = sharedNormal.normalized;
+        sharedNormal = (sharedNormal / wheels.Count).normalized;
 
-        //Debug.DrawRay(middlePoint, sharedNormal*2, Color.blue, Time.deltaTime, false);
+        Debug.DrawRay(middlePoint, Vector3.up*2, Color.blue, Time.deltaTime, false);
+        Debug.DrawRay(middlePoint, sharedNormal*2, Color.yellow, Time.deltaTime, false);
     }
 
 }
-    

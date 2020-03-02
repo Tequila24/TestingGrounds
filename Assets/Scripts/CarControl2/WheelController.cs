@@ -70,9 +70,23 @@ public class WheelController : MonoBehaviour
     private Vector3 depenetrationVector = Vector3.zero;
     private Vector3 wheelVelocity = Vector3.zero;
     private Vector3 surfaceNormal = Vector3.zero;
+    private Vector3 surfacePoint = Vector3.zero;
+    public Vector3 SurfacePoint {
+        get { return surfacePoint; }
+        set { } 
+    }
 
     private Vector3 forwardDirection = Vector3.zero;
+    public Vector3 ForwardDirection {
+        get { return forwardDirection; }
+        set { } 
+    }
     private Vector3 sideDirection = Vector3.zero;
+    public Vector3 SideDirection {
+        get { return sideDirection; }
+        set { } 
+    }
+
 
     private float steeringAngle;
     public float Steer {
@@ -139,22 +153,22 @@ public class WheelController : MonoBehaviour
         Strut = vehicleBase.rotation * rotationToStrut * Vector3.up;
 
         // damp velocity
-        extensionVelocity -= extensionVelocity * dampingValue;
+        extensionVelocity -= extensionVelocity * 0.5f;
         
         // Depenetration value
         collisionCheckInfo.collider = wheelCollider;
-        collisionCheckInfo.colliderPosition = this.transform.position;
+        collisionCheckInfo.colliderPosition = this.transform.position + Strut * extensionVelocity;
         collisionCheckInfo.colliderRotation = this.transform.rotation;
         collisionCheckInfo.checkDistance = wheelCollider.bounds.extents.y + wheelCollider.bounds.extents.x;
         collisionCheckInfo.ignoreList = ignoreList;
         depenetrationVector = DepenCalc.GetDepenetration(collisionCheckInfo);
-        float wheelDepenetrationInThisFrame = (Quaternion.Inverse(rotationToStrut) * Vector3.Project(depenetrationVector, Strut)).y;
-        extensionVelocity += wheelDepenetrationInThisFrame;
+        float wheelDepenetrationInNextFrame = (Quaternion.Inverse(rotationToStrut) * Vector3.Project(depenetrationVector, Strut)).y;
+        extension += wheelDepenetrationInNextFrame;
 
         isGrounded = depenetrationVector.sqrMagnitude > 0 ? true : false;
 
         // Spring value
-        springForce = (-Strut * (extension * springValue) ) ;
+        springForce = (-Strut * (extension * springValue)) ;
         float springAcceleration = (Quaternion.Inverse(rotationToStrut) * springForce).y / vehicleBody.mass;
 
         extensionVelocity += springAcceleration;
@@ -178,9 +192,6 @@ public class WheelController : MonoBehaviour
 
         forwardDirection = (isRight ? Vector3.Cross(surfaceNormal, this.transform.right) : Vector3.Cross(surfaceNormal, -this.transform.right) ).normalized;
         sideDirection = Vector3.Cross(forwardDirection, this.surfaceNormal).normalized;
-
-        Debug.DrawRay(this.transform.position, forwardDirection, Color.yellow, Time.deltaTime, false);
-        Debug.DrawRay(this.transform.position, sideDirection, Color.yellow, Time.deltaTime, false);
     }
 
 
@@ -206,6 +217,7 @@ public class WheelController : MonoBehaviour
         if (Physics.Raycast(this.transform.position, -depenetrationVector, out hit, collisionCheckInfo.checkDistance))
         {
             surfaceNormal = Vector3.Lerp(surfaceNormal, hit.normal, 0.1f);
+            surfacePoint = hit.point;
             //Debug.DrawRay(hit.point, surfaceNormal * 0.5f, Color.yellow, Time.deltaTime, false);
         }
     }

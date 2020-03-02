@@ -112,6 +112,97 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &118348535
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 118348539}
+  - component: {fileID: 118348538}
+  - component: {fileID: 118348537}
+  - component: {fileID: 118348536}
+  m_Layer: 0
+  m_Name: Cube
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!65 &118348536
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118348535}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!23 &118348537
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118348535}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!33 &118348538
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118348535}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &118348539
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118348535}
+  m_LocalRotation: {x: -0, y: -0, z: 0.13052596, w: 0.99144495}
+  m_LocalPosition: {x: 49.65, y: 3.26, z: -27.56852}
+  m_LocalScale: {x: 30, y: 1, z: 10}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 15.000001}
 --- !u!1001 &145139899
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -273,7 +364,7 @@ Transform:
   m_GameObject: {fileID: 157882776}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
-  m_LocalScale: {x: 300, y: 1, z: 300}
+  m_LocalScale: {x: 300, y: 1, z: 61.14}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
@@ -455,12 +546,12 @@ MonoBehaviour:
   isDrive: 0
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.97
-  springValue: 200
-  maxExtension: 0.3
+  dampingValue: 0.38
+  springValue: 500
+  maxExtension: 0.25
   minExtension: -0.1
-  CasterAngle: 10
-  CamberAngle: 10
+  CasterAngle: 0
+  CamberAngle: 0
   extensionVelocity: 0
 --- !u!1 &310902986
 GameObject:
@@ -782,7 +873,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 10
+  m_Constraints: 0
   m_CollisionDetection: 0
 --- !u!64 &421736350
 MeshCollider:
@@ -850,8 +941,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 421736348}
-  m_LocalRotation: {x: -0, y: -0.67922366, z: -0, w: 0.73393136}
-  m_LocalPosition: {x: 36.59, y: 3.45, z: -33.8}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 30.33, y: 2.01, z: -29.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1091489509}
@@ -860,7 +951,7 @@ Transform:
   - {fileID: 1285289111}
   m_Father: {fileID: 0}
   m_RootOrder: 7
-  m_LocalEulerAnglesHint: {x: 0, y: -85.566, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!114 &421736354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1499,12 +1590,12 @@ MonoBehaviour:
   isDrive: 0
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.97
-  springValue: 200
-  maxExtension: 0.3
+  dampingValue: 0.38
+  springValue: 500
+  maxExtension: 0.25
   minExtension: -0.1
-  CasterAngle: 10
-  CamberAngle: 10
+  CasterAngle: 0
+  CamberAngle: 0
   extensionVelocity: 0
 --- !u!1001 &1094034028
 PrefabInstance:
@@ -1849,15 +1940,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c6874806ed83304088ce8f250ad27b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isDrive: 0
+  isDrive: 1
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.97
-  springValue: 200
-  maxExtension: 0.3
+  dampingValue: 0.38
+  springValue: 500
+  maxExtension: 0.25
   minExtension: -0.1
-  CasterAngle: 10
-  CamberAngle: 10
+  CasterAngle: 0
+  CamberAngle: 0
   extensionVelocity: 0
 --- !u!1 &1285289110
 GameObject:
@@ -1964,15 +2055,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c6874806ed83304088ce8f250ad27b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isDrive: 0
+  isDrive: 1
   isSteerable: 0
   MaxSteeringAngle: 20
-  dampingValue: 0.97
-  springValue: 200
-  maxExtension: 0.3
+  dampingValue: 0.38
+  springValue: 500
+  maxExtension: 0.25
   minExtension: -0.1
-  CasterAngle: 10
-  CamberAngle: 10
+  CasterAngle: 0
+  CamberAngle: 0
   extensionVelocity: 0
 --- !u!1 &1353350904
 GameObject:
@@ -2242,12 +2333,12 @@ PrefabInstance:
     - target: {fileID: 5619144835208873846, guid: db030f5cf18986842ab8da0d45785637,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.48
       objectReference: {fileID: 0}
     - target: {fileID: 5619144835208873846, guid: db030f5cf18986842ab8da0d45785637,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -29.32
+      value: -30.36
       objectReference: {fileID: 0}
     - target: {fileID: 5619144835208873846, guid: db030f5cf18986842ab8da0d45785637,
         type: 3}
