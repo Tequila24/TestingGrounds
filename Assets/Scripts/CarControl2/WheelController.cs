@@ -44,7 +44,7 @@ public class WheelController : MonoBehaviour
     private bool isBack = false;
 
     private float extension = 0;
-    public float extensionVelocity = 0;
+    private float extensionVelocity = 0;
 
     private Vector3 Strut = Vector3.zero;
     private Vector3 localRestPoint = Vector3.zero;
@@ -91,12 +91,12 @@ public class WheelController : MonoBehaviour
     private float steeringAngle;
     public float Steer {
         get {   return steeringAngle;  }
-        set {   steeringAngle = Mathf.Clamp(steeringAngle + value, -MaxSteeringAngle, MaxSteeringAngle);    }
+        set {   steeringAngle = Mathf.Clamp(value, -MaxSteeringAngle, MaxSteeringAngle);    }
     }
-    private float Torque = 0;
+    //private float Torque = 0;
 
     private float axialRotationAngle = 0f;
-    private float axialRotationVelocity = 0f;
+    //private float axialRotationVelocity = 0f;
 
 
 
@@ -153,25 +153,24 @@ public class WheelController : MonoBehaviour
         Strut = vehicleBase.rotation * rotationToStrut * Vector3.up;
 
         // damp velocity
-        extensionVelocity -= extensionVelocity * 0.5f;
+        extensionVelocity -= extensionVelocity * dampingValue;
         
+        // Spring value
+        springForce = (-Strut * (extension * springValue)) ;
+        float springAcceleration = (Quaternion.Inverse(rotationToStrut) * springForce).y / vehicleBody.mass;
+        extensionVelocity += springAcceleration;
+
         // Depenetration value
-        collisionCheckInfo.collider = wheelCollider;
-        collisionCheckInfo.colliderPosition = this.transform.position + Strut * extensionVelocity;
-        collisionCheckInfo.colliderRotation = this.transform.rotation;
-        collisionCheckInfo.checkDistance = wheelCollider.bounds.extents.y + wheelCollider.bounds.extents.x;
-        collisionCheckInfo.ignoreList = ignoreList;
+        collisionCheckInfo = new DepenCalc.CollisionCheckInfo(  wheelCollider,
+                                                                wheelCollider.transform.position + Strut * extensionVelocity,
+                                                                wheelCollider.transform.rotation,
+                                                                wheelCollider.bounds.extents.y + wheelCollider.bounds.extents.x,
+                                                                ignoreList );
         depenetrationVector = DepenCalc.GetDepenetration(collisionCheckInfo);
         float wheelDepenetrationInNextFrame = (Quaternion.Inverse(rotationToStrut) * Vector3.Project(depenetrationVector, Strut)).y;
         extension += wheelDepenetrationInNextFrame;
 
         isGrounded = depenetrationVector.sqrMagnitude > 0 ? true : false;
-
-        // Spring value
-        springForce = (-Strut * (extension * springValue)) ;
-        float springAcceleration = (Quaternion.Inverse(rotationToStrut) * springForce).y / vehicleBody.mass;
-
-        extensionVelocity += springAcceleration;
 
 
         // apply values
@@ -197,9 +196,6 @@ public class WheelController : MonoBehaviour
 
     void UpdateRotation()
     {
-        axialRotationAngle += axialRotationVelocity * Time.deltaTime;
-        if (axialRotationAngle > 360.0f)
-            axialRotationAngle -= 360.0f;
         Quaternion axialRotation = Quaternion.AngleAxis(axialRotationAngle, vehicleBase.right);
 
         Quaternion steerRotation = Quaternion.AngleAxis( (isBack ? -steeringAngle : steeringAngle), vehicleBase.up);

@@ -9,6 +9,7 @@ using UnityEngine;
 
 public class CarController : MonoBehaviour
 {
+    public float EnginePower = 200;
 
     private List<WheelController> wheels = new List<WheelController>();
     private Vector3 sharedNormal = Vector3.zero;
@@ -19,6 +20,7 @@ public class CarController : MonoBehaviour
 
     void Awake()
     {
+        Debug.Log("Awaken");
         vehicleBody = this.gameObject.GetComponent<Rigidbody>();
 
         GetWheels();
@@ -31,6 +33,8 @@ public class CarController : MonoBehaviour
         for (int i = 0; i < this.transform.childCount; i++)
         {
             WheelController wheel = this.transform.GetChild(i).GetComponent<WheelController>();
+            if (wheel == null)
+                continue;
             Vector3 wheelLocalPos = wheel.transform.position - this.transform.position;
             float angle = Vector3.SignedAngle(this.transform.forward, wheelLocalPos, this.transform.up);
             if (angle<0)
@@ -57,27 +61,58 @@ public class CarController : MonoBehaviour
 
                 Vector3 restPointVelocity = vehicleBody.GetPointVelocity(wheel.RestPoint) * Time.deltaTime;
 
+
+                // Apply gear friction and losses
+                if (wheel.isDrive) {
+                    //Vector3 gearLosses = Vector3.Project(vehicleBody.velocity, wheel.ForwardDirection) * 0.02f * 4;
+                    //vehicleBody.velocity -= gearLosses;
+                    Vector3 gearLosses = Vector3.Project(restPointVelocity, wheel.ForwardDirection) * 0.1f * wheels.Count *2;
+                    vehicleBody.AddForceAtPosition( -gearLosses, wheel.RestPoint, ForceMode.VelocityChange);
+                }
+
                 // Apply suspension forces
                 Vector3 springForce = Vector3.Project(-wheel.SpringForce, sharedNormal)/* / vehicleBody.mass*/;
                 vehicleBody.AddForceAtPosition( springForce, wheel.RestPoint, ForceMode.Impulse);
-
-                // Apply velocity damping
-                Vector3 verticalRestPointVelocity = Vector3.Project(restPointVelocity, sharedNormal) * wheel.dampingValue * wheels.Count;
-                vehicleBody.AddForceAtPosition( -verticalRestPointVelocity, wheel.RestPoint, ForceMode.VelocityChange );
 
                 // Apply side friction
                 Vector3 sideSlideVelocity = Vector3.Project(restPointVelocity, wheel.SideDirection) * wheels.Count;
                 vehicleBody.AddForceAtPosition(-sideSlideVelocity, wheel.RestPoint, ForceMode.VelocityChange);
 
-                // Apply gear friction and losses
-                if (wheel.isDrive) {
-                    //Vector3 gearLosses = Vector3.Project(restPointVelocity, wheel.ForwardDirection) * 0.5f * wheels.Count;
-                    Vector3 gearLosses = Vector3.Project(vehicleBody.velocity * Time.deltaTime, wheel.ForwardDirection) * 0.5f * wheels.Count;
-                    vehicleBody.AddForceAtPosition( -gearLosses, wheel.RestPoint, ForceMode.VelocityChange);
+
+                // GRAVITY ISSUES (?)
+                // Apply 
+                Vector3 sideGrav = Vector3.ProjectOnPlane(Physics.gravity * Time.deltaTime, sharedNormal) * 0.25f;
+                vehicleBody.AddForce(-sideGrav, ForceMode.VelocityChange);
+                //print(wheel.gameObject.name + " " + wheel.transform.position.y);
+                //print(this.gameObject.name + " " + vehicleBody.velocity.ToString("F4"));
+
+
+                // Apply velocity damping
+                Vector3 verticalRestPointVelocity = Vector3.Project(restPointVelocity, sharedNormal) * wheel.dampingValue * wheels.Count;
+                vehicleBody.AddForceAtPosition( -verticalRestPointVelocity, wheel.RestPoint, ForceMode.VelocityChange );
+
+
+
+
+                float throttle = Input.GetAxis("Vertical");
+                float steer = Input.GetAxis("Horizontal");
+                float brake = Input.GetKey("space") ? 1 : 0;
+
+                if (wheel.isDrive) 
+                {
+                    Vector3 driveForce = wheel.ForwardDirection * throttle * EnginePower * Time.deltaTime;
+                    vehicleBody.AddForceAtPosition( driveForce, wheel.transform.position, ForceMode.Impulse);
                 }
 
-                // Remove fat
-                print(vehicleBody.velocity.ToString("F4"));
+                if (wheel.isSteerable) 
+                {
+                    wheel.Steer = Mathf.Lerp(wheel.Steer, wheel.MaxSteeringAngle * steer, 0.1f);
+                }
+
+
+
+                
+                
             }
 
         }

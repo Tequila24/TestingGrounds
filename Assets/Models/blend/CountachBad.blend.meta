@@ -1,0 +1,312 @@
+fileFormatVersion: 2
+guid: 3e0eea638c5728142a31433a86bedde5
+ModelImporter:
+  serializedVersion: 23
+  fileIDToRecycleName:
+    100000: Air intake hatch back
+    100002: Air intake hatch top
+    100004: Air intake top
+    100006: Ait intake hatch door
+    100008: Back axis
+    100010: Back cover
+    100012: Back cover.001
+    100014: Body
+    100016: //RootNode
+    100018: Door
+    100020: Door.001
+    100022: From disk
+    100024: Front axis
+    100026: Front tire
+    100028: Hood
+    100030: Hood.001
+    100032: Hood.002
+    100034: Hood.003
+    100036: Hood.004
+    100038: Hood.005
+    100040: Hood.006
+    100042: Interior
+    100044: Lights
+    100046: Locker
+    100048: Mirror
+    100050: Mirror.001
+    100052: Mirror.002
+    100054: Plane
+    100056: Plane.001
+    100058: Plane.003
+    100060: Plane.004
+    100062: Plane.005
+    100064: Rear Disk
+    100066: Rear lights
+    100068: Rear lights.001
+    100070: Rear plane
+    100072: Rear tire
+    100074: Roof
+    100076: Roof.001
+    100078: Trunk lid
+    100080: Turn signals
+    100082: Wing.001
+    400000: Air intake hatch back
+    400002: Air intake hatch top
+    400004: Air intake top
+    400006: Ait intake hatch door
+    400008: Back axis
+    400010: Back cover
+    400012: Back cover.001
+    400014: Body
+    400016: //RootNode
+    400018: Door
+    400020: Door.001
+    400022: From disk
+    400024: Front axis
+    400026: Front tire
+    400028: Hood
+    400030: Hood.001
+    400032: Hood.002
+    400034: Hood.003
+    400036: Hood.004
+    400038: Hood.005
+    400040: Hood.006
+    400042: Interior
+    400044: Lights
+    400046: Locker
+    400048: Mirror
+    400050: Mirror.001
+    400052: Mirror.002
+    400054: Plane
+    400056: Plane.001
+    400058: Plane.003
+    400060: Plane.004
+    400062: Plane.005
+    400064: Rear Disk
+    400066: Rear lights
+    400068: Rear lights.001
+    400070: Rear plane
+    400072: Rear tire
+    400074: Roof
+    400076: Roof.001
+    400078: Trunk lid
+    400080: Turn signals
+    400082: Wing.001
+    2100000: No Name
+    2100002: Plastic
+    2100004: Body
+    2100006: Lamp
+    2100008: Lamp glass
+    2100010: none
+    2100012: Glass
+    2100014: povorotnik_1
+    2100016: povorotnik_2
+    2100018: Tires
+    2100020: Metal
+    2300000: Air intake hatch back
+    2300002: Air intake hatch top
+    2300004: Air intake top
+    2300006: Ait intake hatch door
+    2300008: Back axis
+    2300010: Back cover
+    2300012: Back cover.001
+    2300014: Body
+    2300016: Door
+    2300018: Door.001
+    2300020: From disk
+    2300022: Front axis
+    2300024: Front tire
+    2300026: Hood
+    2300028: Hood.001
+    2300030: Hood.002
+    2300032: Hood.003
+    2300034: Hood.004
+    2300036: Hood.005
+    2300038: Hood.006
+    2300040: Interior
+    2300042: Lights
+    2300044: Locker
+    2300046: Mirror
+    2300048: Mirror.001
+    2300050: Mirror.002
+    2300052: Plane
+    2300054: Plane.001
+    2300056: Plane.003
+    2300058: Plane.004
+    2300060: Plane.005
+    2300062: Rear Disk
+    2300064: Rear lights
+    2300066: Rear lights.001
+    2300068: Rear plane
+    2300070: Rear tire
+    2300072: Roof
+    2300074: Roof.001
+    2300076: Trunk lid
+    2300078: Turn signals
+    2300080: Wing.001
+    2300082: //RootNode
+    3300000: Air intake hatch back
+    3300002: Air intake hatch top
+    3300004: Air intake top
+    3300006: Ait intake hatch door
+    3300008: Back axis
+    3300010: Back cover
+    3300012: Back cover.001
+    3300014: Body
+    3300016: Door
+    3300018: Door.001
+    3300020: From disk
+    3300022: Front axis
+    3300024: Front tire
+    3300026: Hood
+    3300028: Hood.001
+    3300030: Hood.002
+    3300032: Hood.003
+    3300034: Hood.004
+    3300036: Hood.005
+    3300038: Hood.006
+    3300040: Interior
+    3300042: Lights
+    3300044: Locker
+    3300046: Mirror
+    3300048: Mirror.001
+    3300050: Mirror.002
+    3300052: Plane
+    3300054: Plane.001
+    3300056: Plane.003
+    3300058: Plane.004
+    3300060: Plane.005
+    3300062: Rear Disk
+    3300064: Rear lights
+    3300066: Rear lights.001
+    3300068: Rear plane
+    3300070: Rear tire
+    3300072: Roof
+    3300074: Roof.001
+    3300076: Trunk lid
+    3300078: Turn signals
+    3300080: Wing.001
+    3300082: //RootNode
+    4300000: Plane.001
+    4300002: Plane.005
+    4300004: Plane.004
+    4300006: Locker
+    4300008: Hood
+    4300010: Hood.006
+    4300012: Hood.002
+    4300014: Hood.001
+    4300016: Plane.003
+    4300018: Back cover.001
+    4300020: Wing.001
+    4300022: Interior
+    4300024: Back cover
+    4300026: Trunk lid
+    4300028: Rear plane
+    4300030: Body
+    4300032: Plane
+    4300034: Hood.005
+    4300036: Hood.004
+    4300038: Hood.003
+    4300040: Rear lights.001
+    4300042: Roof.001
+    4300044: Air intake top
+    4300046: Air intake hatch top
+    4300048: Roof
+    4300050: Lights
+    4300052: Back axis
+    4300054: Front axis
+    4300056: Ait intake hatch door
+    4300058: Turn signals
+    4300060: Rear lights
+    4300062: Rear tire
+    4300064: Front tire
+    4300066: Rear Disk
+    4300068: From disk
+    4300070: Air intake hatch back
+    4300072: Door
+    4300074: Mirror.002
+    4300076: Mirror.001
+    4300078: Mirror
+    4300080: Door.001
+    4300082: CountachBody
+  externalObjects: {}
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    previousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 0
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
