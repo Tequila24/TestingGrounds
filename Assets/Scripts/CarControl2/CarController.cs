@@ -66,7 +66,7 @@ public class CarController : MonoBehaviour
                 if (wheel.isDrive) {
                     //Vector3 gearLosses = Vector3.Project(vehicleBody.velocity, wheel.ForwardDirection) * 0.02f * 4;
                     //vehicleBody.velocity -= gearLosses;
-                    Vector3 gearLosses = Vector3.Project(restPointVelocity, wheel.ForwardDirection) * 0.1f * wheels.Count *2;
+                    Vector3 gearLosses = Vector3.Project(restPointVelocity, wheel.ForwardDirection) * 0.1f * wheels.Count;
                     vehicleBody.AddForceAtPosition( -gearLosses, wheel.RestPoint, ForceMode.VelocityChange);
                 }
 

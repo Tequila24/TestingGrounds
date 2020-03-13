@@ -79,5 +79,10 @@ namespace DepenetrationCalculation {
 
             return depenetrationVector;
         }
+
+        static public void GetColliderPoints(out List<GameObject> collidedGameObjects)
+        {
+
+        }
     }
 }

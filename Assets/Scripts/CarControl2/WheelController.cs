@@ -29,7 +29,13 @@ public class WheelController : MonoBehaviour
     public float CamberAngle = 0;
 
 
-    // 
+    // WHEEL GEOMETRY
+    private float wheelRadius = 1;
+    private float wheelWidth = 1;
+    private float collisionCheckDistance = 0;
+
+
+    // OPERATION VALUES
     private bool isGrounded = false;
     public bool IsGrounded {
         get { return isGrounded; }
@@ -128,14 +134,20 @@ public class WheelController : MonoBehaviour
 
         Strut = vehicleBase.rotation * rotationToStrut * Vector3.up;
         
+        
+
+
+
+        // collision check values
         ignoreList.Add(vehicleBase.gameObject);
         ignoreList.Add(this.gameObject);
-        
-        collisionCheckInfo = new DepenCalc.CollisionCheckInfo(  wheelCollider,
-                                                                wheelCollider.transform.position,
-                                                                wheelCollider.transform.rotation,
-                                                                wheelCollider.bounds.extents.y + wheelCollider.bounds.extents.x,
-                                                                ignoreList );
+
+        MeshFilter meshFilter = this.gameObject.GetComponent<MeshFilter>();
+        if (meshFilter != null) { 
+            wheelRadius = meshFilter.sharedMesh.bounds.extents.y * this.transform.lossyScale.y;
+            wheelWidth = meshFilter.sharedMesh.bounds.extents.x * this.transform.lossyScale.x;
+            collisionCheckDistance = Mathf.Sqrt(wheelRadius*wheelRadius + wheelWidth*wheelWidth);
+        }
     }
 
 
@@ -164,7 +176,7 @@ public class WheelController : MonoBehaviour
         collisionCheckInfo = new DepenCalc.CollisionCheckInfo(  wheelCollider,
                                                                 wheelCollider.transform.position + Strut * extensionVelocity,
                                                                 wheelCollider.transform.rotation,
-                                                                wheelCollider.bounds.extents.y + wheelCollider.bounds.extents.x,
+                                                                collisionCheckDistance,
                                                                 ignoreList );
         depenetrationVector = DepenCalc.GetDepenetration(collisionCheckInfo);
         float wheelDepenetrationInNextFrame = (Quaternion.Inverse(rotationToStrut) * Vector3.Project(depenetrationVector, Strut)).y;
