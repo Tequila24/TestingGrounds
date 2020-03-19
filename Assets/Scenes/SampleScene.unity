@@ -540,20 +540,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 293070127}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c6874806ed83304088ce8f250ad27b3, type: 3}
+  m_Script: {fileID: 11500000, guid: 723c07e0e4d7c834c92432f67a996f4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  wheelMass: 1
   isDrive: 0
-  isSteerable: 1
-  MaxSteeringAngle: 35
-  dampingValue: 0.68
-  springValue: 100
-  maxExtension: 0.2
-  minExtension: -0.1
+  isSteerable: 0
+  springValue: 1
+  dampingValue: 0.01
+  maxExtension: 1
+  minExtension: -1
   CasterAngle: 0
   CamberAngle: 0
-  wheelRadius: 0.41678888
-  wheelWidth: 0.15102866
 --- !u!1 &307731087
 GameObject:
   m_ObjectHideFlags: 0
@@ -1006,7 +1004,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!64 &421736350
 MeshCollider:
@@ -1253,17 +1251,17 @@ PrefabInstance:
     - target: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.7500002
+      value: -1.559
       objectReference: {fileID: 0}
     - target: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.135
       objectReference: {fileID: 0}
     - target: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.95830727
+      value: -1.159
       objectReference: {fileID: 0}
     - target: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
         type: 3}
@@ -1309,6 +1307,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Mass
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 961724424092707509, guid: 658a22d44cfb1ff439777c02c3251a54,
+        type: 3}
+      propertyPath: m_Constraints
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 961724424092707509, guid: 658a22d44cfb1ff439777c02c3251a54,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 961724424092707509, guid: 658a22d44cfb1ff439777c02c3251a54,
+        type: 3}
+      propertyPath: m_UseGravity
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 658a22d44cfb1ff439777c02c3251a54, type: 3}
@@ -1702,7 +1715,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 0650a3ff2a245604bb3ba1558fa596dd, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1738,8 +1751,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 778505056}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 28.315, y: 1.354, z: -27.059}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalPosition: {x: 29.153, y: 0.652, z: -30.164}
+  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 9
@@ -1792,7 +1805,6 @@ GameObject:
   - component: {fileID: 797874054}
   - component: {fileID: 797874053}
   - component: {fileID: 797874052}
-  - component: {fileID: 797874051}
   m_Layer: 0
   m_Name: RearRight
   m_TagString: Untagged
@@ -1814,29 +1826,6 @@ Transform:
   m_Father: {fileID: 421736353}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &797874051
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 797874049}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c6874806ed83304088ce8f250ad27b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isDrive: 1
-  isSteerable: 0
-  MaxSteeringAngle: 20
-  dampingValue: 0.68
-  springValue: 100
-  maxExtension: 0.2
-  minExtension: -0.1
-  CasterAngle: 0
-  CamberAngle: 0
-  wheelRadius: 0.41678888
-  wheelWidth: 0.15102866
 --- !u!64 &797874052
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2693,7 +2682,6 @@ GameObject:
   - component: {fileID: 1285289114}
   - component: {fileID: 1285289113}
   - component: {fileID: 1285289112}
-  - component: {fileID: 1285289115}
   m_Layer: 0
   m_Name: RearLeft
   m_TagString: Untagged
@@ -2774,29 +2762,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1285289110}
   m_Mesh: {fileID: 4300004, guid: 0efce064f814cc24e95e840390d44967, type: 3}
---- !u!114 &1285289115
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1285289110}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c6874806ed83304088ce8f250ad27b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isDrive: 1
-  isSteerable: 0
-  MaxSteeringAngle: 20
-  dampingValue: 0.68
-  springValue: 100
-  maxExtension: 0.2
-  minExtension: -0.1
-  CasterAngle: 0
-  CamberAngle: 0
-  wheelRadius: 0.41678888
-  wheelWidth: 0.15102866
 --- !u!4 &1320892965 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
@@ -3418,12 +3383,12 @@ PrefabInstance:
     - target: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.7108803
+      value: -1.55
       objectReference: {fileID: 0}
     - target: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.041
       objectReference: {fileID: 0}
     - target: {fileID: 961724424092707510, guid: 658a22d44cfb1ff439777c02c3251a54,
         type: 3}
@@ -3747,7 +3712,6 @@ GameObject:
   - component: {fileID: 1867386412}
   - component: {fileID: 1867386411}
   - component: {fileID: 1867386410}
-  - component: {fileID: 1867386409}
   m_Layer: 0
   m_Name: FrontRight
   m_TagString: Untagged
@@ -3769,29 +3733,6 @@ Transform:
   m_Father: {fileID: 421736353}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1867386409
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1867386407}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c6874806ed83304088ce8f250ad27b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isDrive: 0
-  isSteerable: 1
-  MaxSteeringAngle: 35
-  dampingValue: 0.68
-  springValue: 100
-  maxExtension: 0.2
-  minExtension: -0.1
-  CasterAngle: 0
-  CamberAngle: 0
-  wheelRadius: 0.41678888
-  wheelWidth: 0.15102866
 --- !u!64 &1867386410
 MeshCollider:
   m_ObjectHideFlags: 0

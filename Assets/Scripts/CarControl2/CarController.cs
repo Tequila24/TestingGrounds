@@ -53,7 +53,7 @@ public class CarController : MonoBehaviour
 
     void FixedUpdate()
     {
-        UpdateWheelsNormal();
+        //UpdateWheelsNormal();
 
         foreach (WheelController wheel in wheels)
         {

@@ -13,116 +13,140 @@ public class MyWheelCollider : MonoBehaviour
     
 
     // STARTUP VALUES
+    
+    MeshCollider wheelColl = null;
     private float collisionCheckDistance = 0;
     private List<GameObject> collisionIgnoreList = new List<GameObject>();
 
+    public bool isRight = false;
+    public bool isBack = false;
+
+    private Vector3 localRestPoint = Vector3.zero;
+
+    private Quaternion rotationToStrut = Quaternion.identity;
+
+    private Transform vehicleBase = null;
+
 
     // PROCESS VALUES
-    private Vector3 velocityDelta = Vector3.zero;
-    private Vector3 velocity = Vector3.zero;
-    private Vector3 prevPosition = Vector3.zero;
 
-    private Dictionary<GameObject, Vector3> surfacePoints = new Dictionary<GameObject, Vector3>();
+    public Vector3 summNormal = Vector3.zero;
+    private Vector3 summDepenetration = Vector3.zero;
+    private Dictionary<GameObject, RaycastHit> surfacePoints = new Dictionary<GameObject, RaycastHit>();
+
+    public bool isGrounded = false;
+
+    private Vector3 Strut = Vector3.zero;
+    
 
 
-    void Start()
+    void Start() 
     {
-        prevPosition = this.transform.position;
-
-        collisionCheckDistance = Mathf.Sqrt(wheelRadius*wheelRadius + wheelWidth*wheelWidth);
+        InitValues();
     }
 
-    void OnValidate()
+
+    void OnValidate() 
     {
-        MeshFilter meshFilter = this.gameObject.GetComponent<MeshFilter>();
-        if (meshFilter != null) { 
-            wheelRadius = meshFilter.sharedMesh.bounds.extents.y * this.transform.lossyScale.y;
-            wheelWidth = meshFilter.sharedMesh.bounds.extents.x * this.transform.lossyScale.x;
+        InitValues();
+    }
+
+
+    void InitValues()
+    {
+        collisionIgnoreList.Clear();
+
+        wheelColl = this.gameObject.GetComponent<MeshCollider>();
+        if (wheelColl != null) { 
+            wheelRadius = wheelColl.sharedMesh.bounds.extents.y * this.transform.lossyScale.y;
+            wheelWidth = wheelColl.sharedMesh.bounds.extents.x * this.transform.lossyScale.x;
+            collisionCheckDistance = Mathf.Sqrt(wheelRadius*wheelRadius + wheelWidth*wheelWidth);
+            collisionIgnoreList.Add(this.gameObject);
         }
+
     }
 
 
 
     void FixedUpdate()
     {
-        UpdateVelocity();
-        
         FindCollisions();
 
         ProcessCollisions();
+
+        UpdatePosition();
     }
 
 
     void FindCollisions()
     {
+        summDepenetration = Vector3.zero;
+
         surfacePoints.Clear();
 
-        List<Collider> colliders = new List<Collider>();
-
         Collider[] sphereColliders = Physics.OverlapSphere(this.transform.position, collisionCheckDistance);
-        Collider[] boxColliders =  Physics.OverlapBox(this.transform.position, new Vector3(wheelWidth, wheelRadius, wheelRadius), this.transform.rotation);
 
         for (int i = 0; i < sphereColliders.Length; i++)
         {
-            Collider sphereItem = sphereColliders[i];
-            for (int j = 0; j < boxColliders.Length; j++)
-            {
-                Collider boxItem = boxColliders[j];
-                if (sphereItem == boxItem)
-                    colliders.Add(boxItem);
-            }
-        }
-        
-        foreach (Collider item in colliders)
-        {
+            Collider otherCollider = sphereColliders[i];
+
+            // IGNORE IGNORED
+            if ( collisionIgnoreList.Contains(otherCollider.gameObject) )
+                continue;
+
+            // GET DEPENETRATION
+            Vector3 direction;
+            float distance;
+            bool overlapped = Physics.ComputePenetration(   wheelColl, wheelColl.transform.position, wheelColl.transform.rotation,
+                                                            otherCollider, otherCollider.transform.position, otherCollider.transform.rotation,
+                                                            out direction, out distance);
+            if (!overlapped)
+                continue;
+            
+            Vector3 depenetration = direction * distance;
+            summDepenetration -= depenetration;
+
+            // GET CONTACT POINT
             Vector3 closestPoint;
-            if ( item.GetType() == typeof(MeshCollider) ) {
-                Collider coll = item as MeshCollider;
+            if ( otherCollider.GetType() == typeof(MeshCollider) ) {
+                Collider coll = otherCollider as MeshCollider;
                 closestPoint = coll.ClosestPoint(this.transform.position);
             } else 
             {
-                Collider coll = item as Collider;
+                Collider coll = otherCollider as Collider;
                 closestPoint = coll.ClosestPoint(this.transform.position);
             }
 
-            surfacePoints.Add(item.gameObject, closestPoint);
-            
-
+            RaycastHit surfaceHit;
+            if ( Physics.Raycast(this.transform.position, (closestPoint - this.transform.position), out surfaceHit, collisionCheckDistance) ) {
+                surfacePoints.Add(otherCollider.gameObject, surfaceHit);
+                summNormal += surfaceHit.normal;
+            }
         }
-
+        summNormal = summNormal.normalized;
 
     }
 
     void ProcessCollisions()
     {
-        Vector3 impulse = velocity * wheelMass;
+        //fixme
+        Vector3 wheelImpulse = Vector3.zero;
 
-        foreach (GameObject gameObject in surfacePoints.Keys)
+        foreach (GameObject obj in surfacePoints.Keys)
         {
-            Vector3 surfacePoint = surfacePoints[gameObject];
-            Vector3 fromTo = this.transform.position - surfacePoint;
-            
-            Rigidbody body = gameObject.GetComponent<Rigidbody>();
-            
-            if ( (body != null) && (Vector3.Dot(impulse, fromTo) > 0) )
-                body.AddForceAtPosition(-impulse, surfacePoints[gameObject], ForceMode.Impulse);
+            Rigidbody body = obj.GetComponent<Rigidbody>();
+            if (body != null) {
+                if ( Vector3.Dot(surfacePoints[obj].normal, wheelImpulse) < 0 ) {
+                    body.AddForceAtPosition(wheelImpulse, surfacePoints[obj].point, ForceMode.Impulse);
+                }
+            }
         }
+
     }
 
-    void UpdateVelocity()
+    void UpdatePosition()
     {
-        velocity = prevPosition - this.transform.position;
-
-        foreach (Vector3 surfacePoint in surfacePoints.Values)
-        {
-            Vector3 fromTo = this.transform.position - surfacePoint;
-            velocityDelta = fromTo * velocity.magnitude;            
-        }
-
-        this.transform.position += velocityDelta;
-
-
-        prevPosition = this.transform.position;
+        Strut = vehicleBase.rotation * Vector3.up;
     }
 
     #if UNITY_EDITOR
