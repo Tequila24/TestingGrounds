@@ -26,10 +26,12 @@ public class WheelMaster : MonoBehaviour
 
 
     // START VALUES
+    WheelCollisionDetection.WheelCheckData wheelData; 
+
     private Transform vehicleBase = null;
     private Rigidbody vehicleBody = null;
 
-    WheelCollisionDetection.WheelCheckData wheelData; 
+    private Vector3 localRestPoint = Vector3.zero;
 
     private Quaternion rotationToStrut = Quaternion.identity;
 
@@ -44,7 +46,12 @@ public class WheelMaster : MonoBehaviour
     private Vector3 forwardDirection = Vector3.zero;
     private Vector3 sideDirection = Vector3.zero;
 
+    private float extension = 0;
+    private float extensionVelocity = 0;
+
     private float steeringAngle;
+
+    private float axialVelocity;
     // ================
 
 
@@ -60,7 +67,6 @@ public class WheelMaster : MonoBehaviour
 
     void OnValidate()
     {
-        Init();
     }
 
     void Init()
@@ -87,8 +93,10 @@ public class WheelMaster : MonoBehaviour
     }
 
     
-    void Update()
+    void FixedUpdate()
     {
+        Vector3 Strut = vehicleBase.rotation * rotationToStrut * Vector3.up;
+        
         Dictionary<GameObject, RaycastHit> surfaces;
         WheelCollisionDetection.FindSurfaces(wheelData, out surfaces);
 
@@ -97,13 +105,42 @@ public class WheelMaster : MonoBehaviour
             Debug.DrawRay(surfaces[obj].point, surfaces[obj].normal, Color.yellow, Time.deltaTime, false);
         }
 
-        UpdateWheelPosition();
+        float surfacesAxialVelocity = WheelRotationControl.GetSurfaceVelocity(surfaces, wheelData);
+
+        axialVelocity = Mathf.Lerp(axialVelocity, surfacesAxialVelocity, 0.02f);
+
+        
+        // damp velocity
+        extensionVelocity -= extensionVelocity * dampingValue;
+
+
+
+        // Spring value
+        float springForce = (extension * springValue);
+        float springAcceleration = springForce / vehicleBody.mass;
+        extensionVelocity -= springAcceleration;
+
+        print(extensionVelocity);
+        
+
+        float summDepenetration = 0;
+        foreach (RaycastHit contact in surfaces.Values)
+        {
+            summDepenetration += (Quaternion.Inverse(rotationToStrut) * Vector3.Project(contact.normal, Strut)).y;
+        }
+
+        if ( Mathf.Sign(summDepenetration) != Mathf.Sign(extensionVelocity) & (summDepenetration != 0) )
+            extensionVelocity=0;
+
+        extension += (extensionVelocity + summDepenetration);
+
+        extension = Mathf.Clamp(extension, minExtension, maxExtension);
+
+
+        this.transform.position =   vehicleBase.position + 
+                                    vehicleBase.rotation * localRestPoint + 
+                                    Strut * extension;
     }
 
-
-    void UpdateWheelPosition()
-    {
-
-    }
 
 }

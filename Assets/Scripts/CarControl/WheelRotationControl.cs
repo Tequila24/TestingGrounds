@@ -4,20 +4,34 @@ using UnityEngine;
 
 public class WheelRotationControl
 {
-    // Start is called before the first frame update
-    Vector3 GetTorque(Dictionary<GameObject, RaycastHit> surfaces, WheelCheckData wheelData)
+    static public float GetSurfaceVelocity(Dictionary<GameObject, RaycastHit> surfaces, WheelCollisionDetection.WheelCheckData wheelData)
     {
-        Vector3 summSurfaceMoments;
+        Vector3 summSurfaceVelocity = Vector3.zero;
 
-        foreach (GameObject surface in surfaces.keys)
+        foreach (GameObject surface in surfaces.Keys)
         {
-            Vector3 surfaceVelocity = Vector3.zero;
+            RaycastHit contact = surfaces[surface];
             
             Rigidbody surfaceBody = surface.GetComponent<Rigidbody>();
-            if (surfaceBody = null)
+            if (surfaceBody == null)
                 continue;
 
-            surfaceBody.
+            Vector3 surfacePointVelocity = surfaceBody.GetPointVelocity(contact.point);
+
+            Vector3 forwardDirection = ( Vector3.Cross( Vector3.ProjectOnPlane(contact.normal, wheelData.wheelCollider.transform.right),
+                                                        wheelData.wheelCollider.transform.right) ).normalized;
+
+            Vector3 rotatedVelocity = Quaternion.FromToRotation(forwardDirection, Vector3.up) * Vector3.Project(surfacePointVelocity, forwardDirection);
+
+            summSurfaceVelocity += rotatedVelocity;
+
+            Debug.DrawRay(contact.point, rotatedVelocity, Color.blue, Time.deltaTime, false);
         }
+
+        Debug.DrawRay(wheelData.wheelCollider.transform.position, summSurfaceVelocity, Color.red, Time.deltaTime, false);
+
+        float torque = summSurfaceVelocity.magnitude * Vector3.Dot(summSurfaceVelocity, Vector3.up);
+
+        return torque;
     }
 }
